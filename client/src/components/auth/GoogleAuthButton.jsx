@@ -1,10 +1,13 @@
 import React from 'react';
 import { FaGoogle } from 'react-icons/fa';
 
-// ⭐ ВАЖНО: URL вашего бэкенд-маршрута для Google OAuth
-const GOOGLE_AUTH_URL = '/api/users/google'; 
-// Если ваш фронтенд и бэкенд работают на одном домене, достаточно относительного пути. 
-// Если нет, используйте полный: 'http://localhost:5000/api/users/google'
+// 1. Получаем базу URL API, которую мы настроили на Vercel
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// 2. Формируем полный, абсолютный URL для Google OAuth
+// Мы знаем, что VITE_API_BASE_URL заканчивается на /api.
+// Поэтому добавляем только /users/google
+const GOOGLE_AUTH_URL = `${API_BASE_URL}/users/google`;
 
 function GoogleAuthButton() {
     return (
