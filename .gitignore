@@ -1,0 +1,31 @@
+# Зависимости
+/node_modules
+
+# Сборки (Build)
+/client/dist  # Папка сборки Vite
+
+# Файлы окружения (Секреты)
+.env
+.env.local
+.env.development.local
+.env.production
+.env.staging
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.log
+
+# IDE и OS
+.DS_Store
+.vscode
+
+# Дополнительно (если есть)
+/backend/coverage
+
+# Исключаем локальные загрузки файлов
+backend/uploads/
+
+# Исключаем временные файлы Cloudinary (если они там есть)
+.temp/

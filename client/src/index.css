@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-neutral-900 text-white;
+} 
+
+/* Добавьте в ваш основной CSS-файл, например, index.css */
+
+/* Базовые стили для пагинации (точек) */
+.swiper-pagination-bullet {
+    background: #4b5563 !important; /* bg-gray-600 */
+    opacity: 1 !important;
+}
+
+.swiper-pagination-bullet:hover {
+    background: #3b82f6 !important; /* bg-blue-500 */
+}
+
+/* Стили для стрелок навигации */
+.swiper-button-next,
+.swiper-button-prev {
+    color: #ffffff !important; /* Белые стрелки */
+    border-radius: 50%;
+    width: 30px !important;
+    height: 30px !important;
+    transition: background 0.2s;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    color: #3b82f6 !important; /* Синие стрелки при наведении */
+}
+
+/* Коррекция размера стрелок */
+.swiper-button-next::after,
+.swiper-button-prev::after {
+    font-size: 16px !important; 
+    font-weight: bold;
+}
+
+
+/* Стилизация для браузеров на основе WebKit (Chrome, Safari, Edge, Opera) */
+/* Для всего документа */
+::-webkit-scrollbar {
+  width: 8px; /* Ширина для вертикальных полос прокрутки */
+  height: 8px; /* Высота для горизонтальных полос прокрутки */
+}
+
+/* Фон полосы прокрутки */
+::-webkit-scrollbar-track {
+  background: #262626; /* Темный фон для трека (соответствует нейтральному 800) */
+  border-radius: 10px;
+}
+
+/* Сама "ручка" прокрутки */
+::-webkit-scrollbar-thumb {
+  background-color: #4b5563; /* Серый цвет для thumb (соответствует gray-600) */
+  border-radius: 10px;
+  border: 2px solid #262626; /* Дополнительная граница, чтобы thumb выглядел меньше и "плавал" */
+}
+
+/* Изменение цвета thumb при наведении */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280; /* Чуть светлее серый при наведении */
+}
+
+/* Для конкретного элемента с классом .custom-scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #262626;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+  border-radius: 10px;
+  border: 2px solid #262626;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* Стилизация для Firefox */
+/* В Firefox стилизуется только полоса прокрутки контейнера, а не всего документа */
+/* Применяется к контейнеру, который должен иметь полосу прокрутки, т.е. .flex-1.overflow-y-auto */
+.custom-scrollbar {
+  scrollbar-width: thin; /* "auto" (по умолчанию) или "thin" */
+  scrollbar-color: #4b5563 #262626; /* thumb-color track-color */
+}
