@@ -15,7 +15,9 @@ import MediaModal from '../../components/MediaModel';
 const IMAGE_FALLBACK_DATA =
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%231f2937'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui' font-size='24' fill='%239ca3af'>Image not found</text></svg>"; 
 
-const BACKEND_URL = 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const BACKEND_URL = `${BASE_URL}`; // Базовый URL вашего бэкенда
 
 // ФУНКЦИЯ ДЛЯ ПАРСИНГА ТЕКСТА ПОСТА НА ССЫЛКИ (Остается без изменений)
 const parsePostText = (text) => {

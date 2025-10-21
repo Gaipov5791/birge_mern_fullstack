@@ -54,7 +54,7 @@ function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPos
     const handleUpdatePost = useCallback(async (updateData) => {
         // postToEdit теперь берется из области видимости компонента (найден по userPosts)
 
-        // ❌ ВНИМАНИЕ: Если postToEdit === undefined, эта проверка провалится, и вы получите ошибку 'undefined'
+        
         if (!postToEdit) {
             dispatch(toastError('Невозможно найти пост для обновления.'));
             return;

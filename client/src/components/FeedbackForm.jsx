@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { toastSuccess, toastError } from '../redux/features/notifications/notificationSlice'; 
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/';
+const API_URL = import.meta.env.VITE_API_URL;
 
 function FeedbackForm() {
     const dispatch = useDispatch();

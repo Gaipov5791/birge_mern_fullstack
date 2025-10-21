@@ -5,6 +5,9 @@ import axios from 'axios';
 import { setUserProfile } from '../../redux/features/auth/authSlice';
 import ProfileHeader from '../../components/profile/ProfileHeader'; // Импортируем ProfileHeader
 
+// Получаем базовый URL API из переменной окружения
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 function ProfileActions({ userProfile, currentUser }) {
     const dispatch = useDispatch();
     const fileInputRef = useRef(null); 
@@ -34,7 +37,7 @@ function ProfileActions({ userProfile, currentUser }) {
 
         try {
             const token = localStorage.getItem('token');
-            const url = `http://localhost:5000/api/users/follow/${userProfile._id}`;
+            const url = `${API_BASE_URL}/users/follow/${userProfile._id}`;
             const config = {
                 headers: { Authorization: `Bearer ${token}` },
             };
@@ -107,7 +110,7 @@ function ProfileActions({ userProfile, currentUser }) {
                 },
             };
             
-            const response = await axios.put(`http://localhost:5000/api/users/upload-profile-picture/${currentUser._id}`, formData, config);
+            const response = await axios.put(`${API_BASE_URL}/users/upload-profile-picture/${currentUser._id}`, formData, config);
             
             dispatch(setUserProfile(response.data.user)); 
             setSelectedImageFile(null); 

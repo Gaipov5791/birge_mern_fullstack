@@ -3,7 +3,8 @@ import chatService from '../../../api/chatService';
 import { updateMessage, deleteMessages } from './chatSlice';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:5000';
+const API_BASE_DOMAIN = import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, '');
+const SOCKET_URL = API_BASE_DOMAIN;
 let socket;
 
 // Эта функция-помощник гарантирует, что сокет-соединение создается только один раз

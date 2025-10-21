@@ -67,7 +67,7 @@ function DashboardPage() {
 
     // ⭐ ЛОГ: Отслеживаем изменение флага загрузки операций
     useEffect(() => {
-        console.log(`🔄 RENDER LOG: isPostOperationLoading: ${isPostOperationLoading}`);
+
     }, [isPostOperationLoading]);
 
     // ⭐ ИЗМЕНЕНИЯ: Определяем, какой пост редактируется/удаляется
@@ -79,7 +79,6 @@ function DashboardPage() {
     // ⭐ 1. useEffect для загрузки постов 
     useEffect(() => {
         if (user && !postsLoaded) {
-            console.log('🔄 Dashboard: Вызов getPosts() для ПЕРВОНАЧАЛЬНОЙ загрузки.');
             dispatch(getPosts());
         }
 
@@ -110,7 +109,6 @@ function DashboardPage() {
     // ⭐ Хендлер для подтверждения удаления
     const handleDeleteConfirm = () => {
         if (postIdToDelete) {
-            console.log(`🚀 DISPATCH LOG: Вызов deletePost для ID: ${postIdToDelete}`);
 
             handleCloseModals();
 

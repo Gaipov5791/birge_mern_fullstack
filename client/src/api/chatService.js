@@ -1,7 +1,9 @@
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api/chat/';
-const NOTIFICATION_API_URL = 'http://localhost:5000/api/notifications'; // ⭐ Новый URL для уведомлений
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// URL для чата: [Render URL]/api/chat/
+const API_URL = `${BASE_URL}/chat/`; 
+// URL для уведомлений: [Render URL]/api/notifications
+const NOTIFICATION_API_URL = `${BASE_URL}/notifications`;
 
 // Получение истории сообщений
 const getChatHistory = async (receiverId, token) => {

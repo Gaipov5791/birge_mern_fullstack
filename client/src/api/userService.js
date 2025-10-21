@@ -1,5 +1,7 @@
 import axios from "axios";
-const API_URL = 'http://localhost:5000/api/users/';
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_URL = `${BASE_URL}/users/`;
 
 // Функция для получения токена из локального хранилища (если нужно)
 const getToken = () => {

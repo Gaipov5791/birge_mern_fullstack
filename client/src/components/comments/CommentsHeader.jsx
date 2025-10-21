@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+//Получаем базовый URL API из переменной окружения
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 function CommentHeader({ post, commentsCount }) {
     if (!post) return null; // Защита
 
@@ -10,7 +13,7 @@ function CommentHeader({ post, commentsCount }) {
     const postCreatedAt = post.createdAt ? new Date(post.createdAt).toLocaleString('ru-RU') : 'Invalid Date';
     const mediaUrl = post.image || post.video;
     const mediaType = post.image ? 'image' : (post.video ? 'video' : null);
-    const fullMediaUrl = mediaUrl ? `http://localhost:5000${mediaUrl}` : null;
+    const fullMediaUrl = mediaUrl ? `${API_BASE_URL.replace(/\/api$/, '')}${mediaUrl}` : null;
 
     return (
         <div className="bg-neutral-800 rounded-3xl shadow-xl shadow-neutral-900/50 border-b-4 border-indigo-600 p-4 sm:p-6 mb-6">

@@ -19,6 +19,9 @@ import ProfilePostsSection from '../components/profile/ProfilePostsSection';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 import { toastError } from '../redux/features/notifications/notificationSlice';
 
+// Получаем базовый URL API из переменной окружения
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 function ProfilePage() {
     const { id } = useParams();
     const dispatch = useDispatch();
@@ -76,7 +79,7 @@ function ProfilePage() {
                 },
             };
             
-            const response = await axios.put(`http://localhost:5000/api/users/profile`, { bio: editedBio }, config);
+            const response = await axios.put(`${API_BASE_URL}/users/profile`, { bio: editedBio }, config);
             
             dispatch(setUserProfile(response.data.user)); 
             toast.success('Профиль успешно обновлен!'); 
@@ -109,7 +112,7 @@ function ProfilePage() {
                 } : {};
 
                 try {
-                    const profileResponse = await axios.get(`http://localhost:5000/api/users/${targetUserId}`, config);
+                    const profileResponse = await axios.get(`${API_BASE_URL}/users/${targetUserId}`, config);
                     dispatch(setUserProfile(profileResponse.data.user)); 
                     setEditedBio(profileResponse.data.user.bio || ''); 
                     

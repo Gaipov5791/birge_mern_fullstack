@@ -25,7 +25,8 @@ import {
     LEAVE_CHAT
 } from '../redux/actions/actionTypes';
 
-const SOCKET_URL = 'http://localhost:5000'; // Убедитесь, что это правильный URL вашего бэкенда
+const API_BASE_DOMAIN = import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, '');
+const SOCKET_URL = API_BASE_DOMAIN; // Теперь SOCKET_URL = https://birge-mern-fullstack.onrender.com
 let socket;
 let typingTimeout = null;
 

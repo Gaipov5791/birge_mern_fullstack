@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = '/api/trends/';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const API_URL = `${BASE_URL}/trends`;
 
 // Функция для получения списка трендов
 const getTrends = async (token) => {

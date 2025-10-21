@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { followUser, unfollowUser } from '../redux/features/auth/authThunks';
 import { getRecommendedUsers } from '../redux/features/users/userThunks';
-import { resetRecommendedUsers } from '../redux/features/users/userSlice';
 
 import UserCard from '../components/common/UserCard';
 
