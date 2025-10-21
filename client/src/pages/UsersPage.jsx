@@ -27,12 +27,16 @@ function UsersPage() {
     // Загрузка рекомендованных пользователей при монтировании компонента
     useEffect(() => {
         
-        if (recommendedUsers.length === 0 && !isRecommendedLoading) {
+        if (
+            recommendedUsers.length === 0 && 
+            !isRecommendedLoading && 
+            !isRecommendedError
+        ) {
         console.log("UsersPage: Запуск Thunk для получения рекомендаций.");
         dispatch(getRecommendedUsers());
         }
 
-    }, [dispatch, recommendedUsers.length, isRecommendedLoading]);
+    }, [dispatch, recommendedUsers.length, isRecommendedLoading, isRecommendedError]);
 
     // ⭐ Хендлер для подписки/отписки
     const handleToggleFollow = useCallback(async (userId, isFollowing) => {
