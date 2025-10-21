@@ -54,7 +54,10 @@ app.use(cors({
     credentials: true,
 }));
 
-// 1. Инициализируем MongoDB Session Store
+// Для парсинга тела запроса
+app.use(express.json());
+
+// Инициализируем MongoDB Session Store
 const MongoDBStore = connectMongo(session);
 
 const store = new MongoDBStore({
@@ -66,9 +69,6 @@ const store = new MongoDBStore({
 store.on('error', (error) => {
     console.error('Ошибка Mongo Session Store:', error);
 });
-
-// 2. Для парсинга тела запроса
-app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
@@ -341,7 +341,7 @@ app.use(session({
         httpOnly: true, // Рекомендуется для безопасности
         // 🚨 ВАЖНО для Render/HTTPS: Установите secure: true
         secure: process.env.NODE_ENV === 'production', 
-        sameSite: 'lax', // Рекомендуется
+        sameSite: 'none' // Для кросс-доменных запросов
     }
 }));
 
