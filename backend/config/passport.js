@@ -3,9 +3,9 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/User.js'; // Ваша модель пользователя
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 
-dotenv.config();
+// dotenv.config();
 
 // Убедитесь, что в .env есть:
 // CLIENT_DOMAIN=http://localhost:5000 
