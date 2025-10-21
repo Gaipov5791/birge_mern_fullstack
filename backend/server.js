@@ -32,10 +32,25 @@ connectDB();
 const app = express();
 const server = createServer(app);
 
-// 👇 1. КРИТИЧЕСКИ ВАЖНО: CORS ДОЛЖЕН БЫТЬ ПЕРВЫМ! 👇
+
+// ДЛЯ ПОДДЕРЖКИ VERCEL И LOCALHOST
+const allowedOrigins = [
+    process.env.CLIENT_URL, // Ваш боевой URL (Vercel)
+    'http://localhost:5173', // Ваш локальный URL (Vite)
+];
+
 app.use(cors({
-    origin: process.env.CLIENT_URL,
-    сredentials: true,
+    // Используем функцию, чтобы разрешить любой из адресов в массиве
+    origin: (origin, callback) => {
+        // Разрешаем, если нет 'origin' (например, запросы с Postman или с того же Origin)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    // ⚠️ Исправьте опечатку: 'сredentials' -> 'credentials'
+    credentials: true,
 }));
 
 // 2. Для парсинга тела запроса
@@ -45,16 +60,17 @@ const PORT = process.env.PORT || 5000;
 
 const io = new Server(server, {
     cors: {
-        origin: 'http://localhost:5173',
+        origin: [
+            process.env.CLIENT_URL, // Ваш боевой URL (Vercel)
+            'http://localhost:5173'  // Ваш локальный URL (Vite)
+        ].filter(Boolean), // .filter(Boolean) уберет undefined, если CLIENT_URL не установлен
         methods: ['GET', 'POST'],
+        credentials: true // Добавьте это для Socket.IO, если вы используете куки/сессии
     },
 });
 
 const userSocketMap = {}; // userId -> socketId
 
-// ⭐ НОВАЯ СТРУКТУРА ДЛЯ ОТСЛЕЖИВАНИЯ СОСТОЯНИЯ ПОЛЬЗОВАТЕЛЕЙ
-// Теперь каждый сокет будет иметь поле `socket.data.activeChatWith`
-// для отслеживания, с кем пользователь активно общается.
 
 const getReceiverSocketId = (receiverId) => {
     return userSocketMap[receiverId];
