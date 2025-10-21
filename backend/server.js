@@ -54,6 +54,19 @@ app.use(cors({
     credentials: true,
 }));
 
+// 1. Инициализируем MongoDB Session Store
+const MongoDBStore = connectMongo(session);
+
+const store = new MongoDBStore({
+    uri: process.env.MONGO_URI, // Используем вашу переменную MongoDB URI
+    collection: 'sessions',      
+});
+
+// Обработка ошибок для хранилища
+store.on('error', (error) => {
+    console.error('Ошибка Mongo Session Store:', error);
+});
+
 // 2. Для парсинга тела запроса
 app.use(express.json());
 
