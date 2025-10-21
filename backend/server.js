@@ -6,6 +6,7 @@ import express from 'express';
 import session from 'express-session';
 import passport from './config/passport.js';
 import mongoose from 'mongoose';
+import connectMongo from 'connect-mongodb-session';
 import dotenv from 'dotenv';
 dotenv.config();
 import cors from 'cors';
@@ -317,10 +318,18 @@ io.on('connection', (socket) => {
 
 // ⭐ Настройка сессий (Passport.js требует сессий)
 app.use(session({
-    secret: process.env.GOOGLE_CLIENT_SECRET, // Замените на свой секретный ключ
+    secret: process.env.GOOGLE_CLIENT_SECRET, 
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 } // 24 часа
+    // ✅ ИСПОЛЬЗУЕМ MONGO STORE
+    store: store, 
+    cookie: { 
+        maxAge: 1000 * 60 * 60 * 24, // 24 часа
+        httpOnly: true, // Рекомендуется для безопасности
+        // 🚨 ВАЖНО для Render/HTTPS: Установите secure: true
+        secure: process.env.NODE_ENV === 'production', 
+        sameSite: 'lax', // Рекомендуется
+    }
 }));
 
 app.use(passport.initialize());
