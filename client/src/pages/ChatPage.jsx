@@ -121,6 +121,7 @@ function ChatPage() {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900 bg-opacity-70">
                 <FaSpinner className="animate-spin text-5xl text-blue-400" />
+                <p className="ml-4 text-gray-400">Вход в чат...</p>
             </div>
         );
     }
