@@ -2,6 +2,27 @@ import Post from "../models/Post.js";
 import User from "../models/User.js";
 import cloudinary from "../config/cloudinaryConfig.js"; // Импортируем настроенный экземпляр Cloudinary
 
+// 💡 НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В CLOUDINARY
+    const uploadToCloudinary = (file) => {
+        return new Promise((resolve, reject) => {
+            // Определяем тип ресурса для Cloudinary
+            const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+
+            // Создаем поток загрузки
+            const uploadStream = cloudinary.uploader.upload_stream(
+                { 
+                    folder: "birge_posts", 
+                    resource_type: resourceType,
+                    // Добавьте опции для видео, если resourceType == 'video'
+                },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                }
+            ).end(file.buffer); // Завершаем поток, передавая буфер
+        });
+    };
+
 /**
  * Вспомогательная функция для извлечения хэштегов из текста.
  * Находит слова, начинающиеся с #, и возвращает их в виде массива строк в нижнем регистре.
@@ -27,35 +48,13 @@ const extractHashtags = (postText) => {
 // @route     POST /api/posts/create
 // @access    Приватный (требуется аутентификация)
 export const createPost = async (req, res) => {
-    const { text } = req.body;
-    // ⭐ Теперь это МАССИВ объектов файлов: [{...}, {...}, ...]
-    const files = req.files; 
+    const textTrimmed = req.body.text ? req.body.text.trim() : '';
+    // req.files содержит файлы из memoryStorage
+    const files = req.files || [];
 
-    // Проверяем, что есть хотя бы текст или файлы
-    if (!text && (!files || files.length === 0)) {
+    if (!textTrimmed && files.length === 0) {
         return res.status(400).json({ message: "Пожалуйста, добавьте текст или файл(ы)!" });
     }
-
-    // 💡 НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В CLOUDINARY
-    const uploadToCloudinary = (file) => {
-        return new Promise((resolve, reject) => {
-            // Определяем тип ресурса для Cloudinary
-            const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
-
-            // Создаем поток загрузки
-            const uploadStream = cloudinary.uploader.upload_stream(
-                { 
-                    folder: "birge_posts", 
-                    resource_type: resourceType,
-                    // Добавьте опции для видео, если resourceType == 'video'
-                },
-                (error, result) => {
-                    if (error) return reject(error);
-                    resolve(result);
-                }
-            ).end(file.buffer); // Завершаем поток, передавая буфер
-        });
-    };
 
     try {
         // ⭐ 1. ИЗВЛЕЧЕНИЕ ХЭШТЕГОВ ИЗ ТЕКСТА
@@ -69,17 +68,17 @@ export const createPost = async (req, res) => {
             media: [], 
         };
 
-        // 🌟 ИЗМЕНЕНИЕ: Загружаем все файлы в Cloudinary параллельно
+        // 🌟 ИСПРАВЛЕНИЕ ЛОГИКИ: ЗАГРУЗКА В CLOUDINARY
         if (files.length > 0) {
-            // Promise.all ждет, пока ВСЕ загрузки в Cloudinary завершатся
-            const uploadResults = await Promise.all(
-                files.map(file => uploadToCloudinary(file))
-            );
+            const uploadPromises = files.map(file => uploadToCloudinary(file));
+            
+            // Ждем завершения всех загрузок
+            const uploadResults = await Promise.all(uploadPromises);
 
-            // Формируем массив media из результатов
+            // Формируем массив media из результатов Cloudinary
             postData.media = uploadResults.map(result => ({
                 type: result.resource_type, // 'image' или 'video'
-                url: result.secure_url,     // Безопасный URL из Cloudinary
+                url: result.secure_url,     // Безопасный URL
             }));
         }
         
