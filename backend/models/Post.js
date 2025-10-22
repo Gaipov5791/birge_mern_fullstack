@@ -8,7 +8,6 @@ const postSchema = new mongoose.Schema({
     },
     text: {
         type: String,
-        required: [true, "Пожалуйста, добавьте текст поста"],
         trim: true,
         maxlength: [500, "Пост не должен превышать 500 символов"],
     },
