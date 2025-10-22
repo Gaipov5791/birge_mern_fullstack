@@ -11,7 +11,7 @@ import {
     getPostsByHashtag 
 } from "../controllers/postController.js";
 import { protect } from "../middleware/authMddleware.js";
-import upload from "../middleware/uploadMiddleware.js"; // Импорт middleware для загрузки файлов
+import upload from "../config/cloudinaryConfig.js"; // Импорт middleware для загрузки файлов
 
 const router = express.Router();
 

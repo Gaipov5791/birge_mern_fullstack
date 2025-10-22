@@ -1,5 +1,6 @@
 import Post from "../models/Post.js";
 import User from "../models/User.js";
+import cloudinary from "../config/cloudinaryConfig.js"; // Импортируем настроенный экземпляр Cloudinary
 
 /**
  * Вспомогательная функция для извлечения хэштегов из текста.
