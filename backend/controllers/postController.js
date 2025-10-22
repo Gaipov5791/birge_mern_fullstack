@@ -1,6 +1,5 @@
 import Post from "../models/Post.js";
 import User from "../models/User.js";
-import { unlink } from 'fs/promises';
 
 /**
  * Вспомогательная функция для извлечения хэштегов из текста.
@@ -36,14 +35,25 @@ export const createPost = async (req, res) => {
         return res.status(400).json({ message: "Пожалуйста, добавьте текст или файл(ы)!" });
     }
 
-    // Вспомогательная функция для удаления всех загруженных файлов при ошибке
-    const cleanupFiles = async (files) => {
-        if (files && files.length > 0) {
-            // Используем Promise.all для параллельного удаления всех файлов
-            await Promise.all(files.map(file => 
-                unlink(file.path).catch(err => console.error(`Ошибка при удалении файла ${file.filename}:`, err))
-            ));
-        }
+    // 💡 НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В CLOUDINARY
+    const uploadToCloudinary = (file) => {
+        return new Promise((resolve, reject) => {
+            // Определяем тип ресурса для Cloudinary
+            const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+
+            // Создаем поток загрузки
+            const uploadStream = cloudinary.uploader.upload_stream(
+                { 
+                    folder: "birge_posts", 
+                    resource_type: resourceType,
+                    // Добавьте опции для видео, если resourceType == 'video'
+                },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                }
+            ).end(file.buffer); // Завершаем поток, передавая буфер
+        });
     };
 
     try {
@@ -58,19 +68,18 @@ export const createPost = async (req, res) => {
             media: [], 
         };
 
-        // ⭐ 2. ОБРАБОТКА МНОЖЕСТВА ФАЙЛОВ
-        if (files && files.length > 0) {
-            files.forEach(file => {
-                const fileType = file.mimetype.split('/')[0]; // <--- ИСПРАВЛЕНО: обращаемся к file.mimetype
-                const filePath = `/uploads/${file.filename}`;
-                
-                // Добавляем объект с типом и путем в массив media
-                postData.media.push({
-                    type: fileType,
-                    url: filePath,
-                    // Можно добавить оригинальное имя, размер и т.д.
-                });
-            });
+        // 🌟 ИЗМЕНЕНИЕ: Загружаем все файлы в Cloudinary параллельно
+        if (files.length > 0) {
+            // Promise.all ждет, пока ВСЕ загрузки в Cloudinary завершатся
+            const uploadResults = await Promise.all(
+                files.map(file => uploadToCloudinary(file))
+            );
+
+            // Формируем массив media из результатов
+            postData.media = uploadResults.map(result => ({
+                type: result.resource_type, // 'image' или 'video'
+                url: result.secure_url,     // Безопасный URL из Cloudinary
+            }));
         }
         
         // ⭐ 3. СОЗДАНИЕ И СОХРАНЕНИЕ ПОСТА
