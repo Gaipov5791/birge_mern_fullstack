@@ -24,7 +24,8 @@ function LoginPage() {
         isLoading, 
         isError, 
         isSuccess, 
-        message 
+        message,
+        isLoginLoading 
     } = useSelector(
         (state) => state.auth
     );
@@ -77,8 +78,6 @@ function LoginPage() {
         dispatch(loginUser(userData));
         console.log('Login attempt with:', userData);
     };
-
-    const isLoginLoading = isLoading;
 
     return (
         // ⭐ Тёмный фон

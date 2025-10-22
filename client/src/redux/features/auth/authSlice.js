@@ -26,6 +26,7 @@ const initialState = {
     isError: false,
     message: "",
     isFollowing: false,
+    isLoginLoading: false,
 };
 
 export const authSlice = createSlice({
@@ -38,6 +39,7 @@ export const authSlice = createSlice({
             state.isError = false;
             state.message = "";
             state.isFollowing = false;
+            state.isLoginLoading = false;
         },
         setUserProfile: (state, action) => {
             state.userProfile = action.payload;
@@ -85,16 +87,18 @@ export const authSlice = createSlice({
                 state.message = action.payload.message;
             })
             .addCase(registerUser.rejected, (state, action) => { /* ... */ })
-            .addCase(loginUser.pending, (state) => { state.isLoading = true; })
+            .addCase(loginUser.pending, (state) => { 
+                state.isLoginLoading = true; 
+            })
             .addCase(loginUser.fulfilled, (state, action) => {
-                state.isLoading = false;
+                state.isLoginLoading = false;
                 state.isSuccess = true;
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 state.message = action.payload.message;
             })
             .addCase(loginUser.rejected, (state, action) => {
-                state.isLoading = false;
+                state.isLoginLoading = false;
                 state.isError = true;
                 state.message = action.payload;
                 state.user = null;
