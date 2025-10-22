@@ -8,15 +8,6 @@ import { toastError, toastSuccess } from '../redux/features/notifications/notifi
 
 import GoogleAuthButton from '../components/auth/GoogleAuthButton';
 
-// Полноэкранный лоадер для "Идет авторизация"
-const FullPageLoader = () => (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 text-gray-100">
-        <Spinner />
-        <div className="text-xl mt-4 text-blue-400">Идет авторизация...</div>
-        <p className="mt-2 text-sm text-gray-400">Пожалуйста, подождите, мы проверяем ваши данные.</p>
-    </div>
-);
-
 function LoginPage() {
     const [formData, setFormData] = useState({
         email: '',
@@ -46,8 +37,10 @@ function LoginPage() {
         }
 
         if (isSuccess || user) {
-            // dispatch(toastSuccess('Успешный вход! Перенаправление...'));
-            navigate('/dashboard');
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 500); // Небольшая задержка для лучшего UX
+            dispatch(toastSuccess('Успешный вход! Добро пожаловать обратно.'));
         }
 
         // Cleanup function для сброса состояния при размонтировании
@@ -70,6 +63,8 @@ function LoginPage() {
     const onSubmit = (e) => {
         e.preventDefault();
 
+        if (isLoading) return; // Предотвращаем множественные сабмиты
+
         if (!email || !password) {
             dispatch(toastError('Пожалуйста, заполните все поля.'));
             return;
@@ -83,10 +78,6 @@ function LoginPage() {
         dispatch(loginUser(userData));
         console.log('Login attempt with:', userData);
     };
-
-    if (isLoading) {
-         return <FullPageLoader />;
-    }
 
     return (
         // ⭐ Тёмный фон
