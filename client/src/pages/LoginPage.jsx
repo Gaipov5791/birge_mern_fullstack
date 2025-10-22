@@ -40,7 +40,6 @@ function LoginPage() {
             setTimeout(() => {
                 navigate('/dashboard');
             }, 500); // Небольшая задержка для лучшего UX
-            dispatch(toastSuccess('Успешный вход! Добро пожаловать обратно.'));
         }
 
         // Cleanup function для сброса состояния при размонтировании
@@ -78,6 +77,8 @@ function LoginPage() {
         dispatch(loginUser(userData));
         console.log('Login attempt with:', userData);
     };
+
+    const isLoginLoading = isLoading;
 
     return (
         // ⭐ Тёмный фон
@@ -125,9 +126,9 @@ function LoginPage() {
                         <button
                             type="submit"
                             className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm sm:text-base font-medium rounded-lg text-white uppercase bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-neutral-800 transition duration-200 shadow-md shadow-blue-500/30"
-                            disabled={isLoading}
+                            disabled={isLoginLoading}
                         >
-                            {isLoading ? 'Вход...' : 'Войти'}
+                            {isLoginLoading ? 'Вход...' : 'Войти'}
                         </button>
                     </div>
                 </form>
