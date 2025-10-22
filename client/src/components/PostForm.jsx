@@ -79,14 +79,16 @@ function PostForm() {
             return;
         }
 
+        const trimmedText = newPostText.trim();
+
         // Проверяем selectedFiles
-        if (!newPostText.trim() && selectedFiles.length === 0) {
+        if (!trimmedText && selectedFiles.length === 0) {
             dispatch(toastInfo('Пожалуйста, введите текст или выберите файл(ы) для поста.'));
             return;
         }
 
         const formData = new FormData();
-        formData.append('text', newPostText);
+        formData.append('text', trimmedText);
         
         // КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: Добавляем ВСЕ файлы в FormData
         if (selectedFiles.length > 0) {
