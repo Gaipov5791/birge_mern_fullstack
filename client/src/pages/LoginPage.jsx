@@ -46,10 +46,8 @@ function LoginPage() {
         }
 
         if (isSuccess || user) {
-            dispatch(toastSuccess('Успешный вход! Перенаправление...'));
-            setTimeout(() => {
-                navigate('/dashboard');
-            }, 50);
+            // dispatch(toastSuccess('Успешный вход! Перенаправление...'));
+            navigate('/dashboard');
         }
 
         // Cleanup function для сброса состояния при размонтировании
