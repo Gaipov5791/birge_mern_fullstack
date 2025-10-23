@@ -19,6 +19,10 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const BACKEND_URL = `${BASE_URL}`; // Базовый URL вашего бэкенда
 
+// ⭐ КОНСТАНТА: Максимальное количество символов для отображения по умолчанию
+const TEXT_LIMIT = 300; 
+const TRUNCATE_POINT = TEXT_LIMIT; // Точка, после которой обрезаем текст
+
 // ⭐ НОВАЯ ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ БЕЗОПАСНОГО URL
 const getSafeUrl = (url, backendUrl) => {
     // Если URL уже начинается с http(s), возвращаем его как есть.
@@ -82,6 +86,14 @@ const parsePostText = (text) => {
 
 function PostContent({ post }) {
     const [modalData, setModalData] = useState({ url: null, type: null });
+
+    // ⭐ НОВОЕ СОСТОЯНИЕ: Для управления видимостью полного текста
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // ⭐ НОВАЯ ФУНКЦИЯ: Переключение состояния
+    const toggleExpand = useCallback(() => {
+        setIsExpanded(prev => !prev);
+    }, []);
     
     const openMediaModal = useCallback((url, type) => {
         // Теперь используем вспомогательную функцию
@@ -113,6 +125,44 @@ function PostContent({ post }) {
 
     // Зависимости: только post.media, потому что image/video/videoPoster теперь устарели
     }, [post.media, post.image, post.video, post.videoPoster]);
+
+    // ⭐ НОВАЯ ЛОГИКА: Форматирование текста
+    const renderTextContent = useMemo(() => {
+        if (!post.text) return null;
+
+        const needsTruncating = post.text.length > TRUNCATE_POINT;
+        let displayContent = post.text;
+
+        // Если текст длинный И не развернут, обрезаем его
+        if (needsTruncating && !isExpanded) {
+            displayContent = post.text.substring(0, TRUNCATE_POINT);
+            // Пытаемся обрезать по последнему пробелу, чтобы избежать обрезания слова
+            const lastSpace = displayContent.lastIndexOf(' ');
+            if (lastSpace !== -1) {
+                displayContent = displayContent.substring(0, lastSpace);
+            }
+        }
+        
+        // Рендерим обрезанный/полный текст
+        const parsedText = parsePostText(displayContent);
+
+        return (
+            <>
+                <p className="text-gray-300 whitespace-pre-wrap text-sm sm:text-base leading-relaxed break-words">
+                    {parsedText}
+                    {needsTruncating && !isExpanded && <span>...</span>} 
+                </p>
+                {needsTruncating && (
+                    <button 
+                        onClick={toggleExpand}
+                        className="text-blue-400 hover:underline text-sm font-semibold mt-1 inline-block"
+                    >
+                        {isExpanded ? 'свернуть' : 'читать далее'}
+                    </button>
+                )}
+            </>
+        );
+    }, [post.text, isExpanded, toggleExpand]); // Зависит от текста и состояния
 
 
     // ⭐ 2. Компонент для рендеринга ОДНОГО слайда
@@ -192,7 +242,7 @@ function PostContent({ post }) {
             <div className='mt-2'>
                 {post.text && (
                     <p className="text-gray-300 mb-4 whitespace-pre-wrap text-sm sm:text-base leading-relaxed break-words">
-                        {parsePostText(post.text)}
+                        {renderTextContent}
                     </p>
                 )}
 
