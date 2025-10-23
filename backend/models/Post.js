@@ -9,7 +9,7 @@ const postSchema = new mongoose.Schema({
     text: {
         type: String,
         trim: true,
-        maxlength: [500, "Пост не должен превышать 500 символов"],
+        maxlength: [2000, "Пост не должен превышать 2000 символов"],
     },
     hashtags: {
         type: [String], // Массив строк
