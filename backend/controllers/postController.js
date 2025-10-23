@@ -77,7 +77,7 @@ export const createPost = async (req, res) => {
 
     try {
         // ⭐ 1. ИЗВЛЕЧЕНИЕ ХЭШТЕГОВ ИЗ ТЕКСТА
-        const extractedTags = extractHashtags(text);
+        const extractedTags = extractHashtags(textTrimmed);
 
         let postData = {
             author: req.user._id,
@@ -116,9 +116,6 @@ export const createPost = async (req, res) => {
         console.error("Ошибка при создании поста:", error);
 
         console.error("--- 5. ОШИБКА CATCH В КОНТРОЛЛЕРЕ: ---", error); // ⭐ ЛОГ
-        
-        // ⭐ 4. УДАЛЕНИЕ ВСЕХ ЗАГРУЖЕННЫХ ФАЙЛОВ ПРИ ОШИБКЕ
-        await cleanupFiles(req.files);
         
         return res.status(500).json({ message: "Ошибка сервера" });
     }
