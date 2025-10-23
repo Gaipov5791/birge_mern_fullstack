@@ -29,15 +29,18 @@ const getSafeUrl = (url, backendUrl) => {
     return `${backendUrl}${url}`;
 };
 
-// ФУНКЦИЯ ДЛЯ ПАРСИНГА ТЕКСТА ПОСТА НА ССЫЛКИ (Остается без изменений)
+// ФУНКЦИЯ ДЛЯ ПАРСИНГА ТЕКСТА ПОСТА НА ССЫЛКИ И ПЕРЕНОСЫ СТРОК
 const parsePostText = (text) => {
-    // ... ваш код parsePostText
+    if (!text) return null;
+    
     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
     const parts = text.split(urlRegex);
 
-    return parts.map((part, index) => {
+    const parsedElements = parts.map((part, index) => {
+        // 1. Обработка ссылок
         if (part.match(urlRegex)) {
             let href = part;
+            // ... (Ваша логика для формирования href остается без изменений)
             if (href.startsWith('www.')) {
                 href = `http://${href}`;
             } else if (!href.startsWith('http')) {
@@ -46,7 +49,7 @@ const parsePostText = (text) => {
 
             return (
                 <a
-                    key={index}
+                    key={`link-${index}`} // Уникальный ключ
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -56,8 +59,24 @@ const parsePostText = (text) => {
                 </a>
             );
         }
-        return part; 
+        
+        // 2. Обработка переносов строк в обычном тексте (самый важный шаг)
+        // Разбиваем часть текста по переводам строки
+        const textSegments = part.split('\n');
+        
+        return textSegments.map((segment, segIndex) => (
+            <React.Fragment key={`seg-${index}-${segIndex}`}>
+                {/* Выводим текстовый сегмент */}
+                {segment}
+                {/* Добавляем <br> после каждого сегмента, кроме последнего */}
+                {segIndex < textSegments.length - 1 && <br />}
+            </React.Fragment>
+        ));
     });
+
+    // Поскольку мы теперь обрабатываем переносы строк с помощью <br />, 
+    // класс whitespace-pre-wrap становится НЕОБЯЗАТЕЛЬНЫМ, но и не повредит.
+    return parsedElements;
 };
 
 
@@ -172,7 +191,7 @@ function PostContent({ post }) {
         <>
             <div className='mt-2'>
                 {post.text && (
-                    <p className="text-gray-300 mb-4 whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
+                    <p className="text-gray-300 mb-4 text-sm sm:text-base leading-relaxed">
                         {parsePostText(post.text)}
                     </p>
                 )}
