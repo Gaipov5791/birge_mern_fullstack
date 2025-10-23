@@ -191,7 +191,7 @@ function PostContent({ post }) {
         <>
             <div className='mt-2'>
                 {post.text && (
-                    <p className="text-gray-300 mb-4 text-sm sm:text-base leading-relaxed">
+                    <p className="text-gray-300 mb-4 whitespace-pre-wrap text-sm sm:text-base leading-relaxed break-words">
                         {parsePostText(post.text)}
                     </p>
                 )}
