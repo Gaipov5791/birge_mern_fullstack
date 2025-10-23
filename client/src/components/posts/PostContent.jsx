@@ -19,6 +19,16 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const BACKEND_URL = `${BASE_URL}`; // Базовый URL вашего бэкенда
 
+// ⭐ НОВАЯ ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ БЕЗОПАСНОГО URL
+const getSafeUrl = (url, backendUrl) => {
+    // Если URL уже начинается с http(s), возвращаем его как есть.
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        return url;
+    }
+    // Если это относительный путь (старая локальная логика), добавляем BASE_URL
+    return `${backendUrl}${url}`;
+};
+
 // ФУНКЦИЯ ДЛЯ ПАРСИНГА ТЕКСТА ПОСТА НА ССЫЛКИ (Остается без изменений)
 const parsePostText = (text) => {
     // ... ваш код parsePostText
@@ -55,8 +65,9 @@ function PostContent({ post }) {
     const [modalData, setModalData] = useState({ url: null, type: null });
     
     const openMediaModal = useCallback((url, type) => {
-        const fullUrl = `${BACKEND_URL}${url}`;
-        setModalData({ url: fullUrl, type });
+        // Теперь используем вспомогательную функцию
+        const safeUrl = getSafeUrl(url, BACKEND_URL); 
+        setModalData({ url: safeUrl, type });
     }, []);
     
     const closeMediaModal = useCallback(() => setModalData({ url: null, type: null }), []);
@@ -87,7 +98,7 @@ function PostContent({ post }) {
 
     // ⭐ 2. Компонент для рендеринга ОДНОГО слайда
     const renderSlideContent = useCallback((item) => {
-        const fullUrl = `${BACKEND_URL}${item.url}`;
+        const fullUrl = getSafeUrl(item.url, BACKEND_URL);
 
         const isImage = item.type === 'image';
         const isVideo = item.type === 'video';
