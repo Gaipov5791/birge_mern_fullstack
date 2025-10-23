@@ -3,25 +3,27 @@ import User from "../models/User.js";
 import cloudinary from "../config/cloudinaryConfig.js";
 
 // 💡 НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В CLOUDINARY
-    const uploadToCloudinary = (file) => {
-        return new Promise((resolve, reject) => {
-            // Определяем тип ресурса для Cloudinary
-            const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+const uploadToCloudinary = (file) => {
+    return new Promise((resolve, reject) => {
+        const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
 
-            // Создаем поток загрузки
-            const uploadStream = cloudinary.uploader.upload_stream(
-                { 
-                    folder: "birge_posts", 
-                    resource_type: resourceType,
-                    // Добавьте опции для видео, если resourceType == 'video'
-                },
-                (error, result) => {
-                    if (error) return reject(error);
-                    resolve(result);
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { 
+                folder: "birge_posts", 
+                resource_type: resourceType,
+            },
+            (error, result) => {
+                if (error) {
+                    console.error("Cloudinary Error:", error); // ⭐ ЛОГ ОШИБКИ CLOUDINARY
+                    return reject(error); // Обязательно отклоняем промис при ошибке
                 }
-            ).end(file.buffer); // Завершаем поток, передавая буфер
-        });
-    };
+                // ⭐ ЛОГ УСПЕШНОГО URL
+                console.log(`Cloudinary Success: ${result.secure_url}`); 
+                resolve(result);
+            }
+        ).end(file.buffer); 
+    });
+};
 
 /**
  * Вспомогательная функция для извлечения хэштегов из текста.
@@ -89,16 +91,19 @@ export const createPost = async (req, res) => {
 
         // 🌟 ИСПРАВЛЕНИЕ ЛОГИКИ: ЗАГРУЗКА В CLOUDINARY
         if (files.length > 0) {
-            const uploadPromises = files.map(file => uploadToCloudinary(file));
-            
-            // Ждем завершения всех загрузок
-            const uploadResults = await Promise.all(uploadPromises);
+            try {
+                const uploadPromises = files.map(file => uploadToCloudinary(file));
+                const uploadResults = await Promise.all(uploadPromises);
 
-            // Формируем массив media из результатов Cloudinary
-            postData.media = uploadResults.map(result => ({
-                type: result.resource_type, // 'image' или 'video'
-                url: result.secure_url,     // Безопасный URL
-            }));
+                postData.media = uploadResults.map(result => ({
+                    type: result.resource_type, 
+                    url: result.secure_url, // Убедитесь, что это не undefined
+                }));
+            } catch (uploadError) {
+                console.error("FATAL UPLOAD ERROR: ", uploadError);
+                // Если загрузка падает, лучше вернуть ошибку 500
+                return res.status(500).json({ message: "Ошибка загрузки файла на сервер Cloudinary." });
+            }
         }
         
         // ⭐ 3. СОЗДАНИЕ И СОХРАНЕНИЕ ПОСТА
