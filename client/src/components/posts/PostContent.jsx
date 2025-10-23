@@ -226,14 +226,11 @@ function PostContent({ post }) {
     // Если медиа нет, рендерим только текст
     if (mediaItems.length === 0) {
         return (
-            <div className='mt-2'>
-                {post.text && (
-                    <p className="text-gray-300 whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
-                        {parsePostText(post.text)}
-                    </p>
-                )}
-            </div>
-        );
+        <div className='mt-2'>
+            {/* ИСПРАВЛЕНИЕ: Используем renderTextContent для пагинации */}
+            {renderTextContent} 
+        </div>
+    );
     }
     
     // ⭐ 3. Основной рендеринг
@@ -241,10 +238,10 @@ function PostContent({ post }) {
         <>
             <div className='mt-2'>
                 {post.text && (
-                    <p className="text-gray-300 mb-4 whitespace-pre-wrap text-sm sm:text-base leading-relaxed break-words">
-                        {renderTextContent}
-                    </p>
-                )}
+                <div className="mb-4"> 
+                    {renderTextContent}
+                </div>
+            )}
 
                 <div className="media-carousel-container max-w-4xl mx-auto overflow-hidden">
                     <Swiper
