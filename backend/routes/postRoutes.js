@@ -11,13 +11,27 @@ import {
     getPostsByHashtag 
 } from "../controllers/postController.js";
 import { protect } from "../middleware/authMddleware.js";
-import upload from "../config/cloudinaryConfig.js"; // Импорт middleware для загрузки файлов
+import { upload } from "../config/cloudinaryConfig.js"; // Импорт middleware для загрузки файлов
 
 const router = express.Router();
 
 router.get("/timeline", protect, getTimelinePosts);
 
-router.post("/create", protect, upload.array('files', 5), createPost);
+router.post(
+    '/create', 
+    protect, 
+    (req, res, next) => {
+        console.log("--- 1. Вход в роут /create. Запуск Multer. ---");
+        next();
+    },
+    upload.array('files', 5), 
+    (req, res, next) => {
+        console.log("--- 2. Multer завершил работу. Передача в контроллер. ---");
+        next();
+    },
+    createPost
+);
+// router.post("/create", protect, upload.array('files', 5), createPost);
 router.get("/", protect, getPosts);
 router.get("/hashtag/:tag_name", protect, getPostsByHashtag);
 router.get("/user/:userId", protect, getUserPosts);

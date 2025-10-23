@@ -12,8 +12,9 @@ cloudinary.config({
 });
 
 // Настройка Multer для обработки файлов
-// Используем memoryStorage, чтобы multer временно хранил файл в памяти (req.files[i].buffer)
+// Используем memoryStorage, чтобы multer временно хранил файл в памяти
 const storage = multer.memoryStorage(); 
+console.log("--- 3. Multer Config: ИСПОЛЬЗУЕТСЯ memoryStorage. ---"); // ⭐ ЛОГ
 
 // 🌟 ИСПРАВЛЕНИЕ 1: Фильтр для проверки типа файла (Изображения И Видео)
 const fileFilter = (req, file, cb) => {
@@ -38,3 +39,5 @@ const upload = multer({
 });
 
 export { cloudinary, upload };
+
+export default cloudinary;

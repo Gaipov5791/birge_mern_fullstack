@@ -1,6 +1,6 @@
 import Post from "../models/Post.js";
 import User from "../models/User.js";
-import cloudinary from "../config/cloudinaryConfig.js"; // Импортируем настроенный экземпляр Cloudinary
+import cloudinary from "../config/cloudinaryConfig.js";
 
 // 💡 НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В CLOUDINARY
     const uploadToCloudinary = (file) => {
@@ -49,8 +49,27 @@ const extractHashtags = (postText) => {
 // @access    Приватный (требуется аутентификация)
 export const createPost = async (req, res) => {
     const textTrimmed = req.body.text ? req.body.text.trim() : '';
-    // req.files содержит файлы из memoryStorage
     const files = req.files || [];
+
+    console.log("--- 4. Вход в createPost контроллер ---"); // ⭐ ЛОГ
+    console.log("req.body:", req.body);
+
+    if (files.length > 0) {
+        console.log(`Файлы получены: ${files.length}`);
+        // ⭐ КРИТИЧЕСКИЙ ЛОГ
+        console.log("ПЕРВЫЙ ФАЙЛ: ", { 
+            fieldname: files[0].fieldname,
+            originalname: files[0].originalname,
+            encoding: files[0].encoding,
+            mimetype: files[0].mimetype,
+            // Если есть, то будет LOG (если диск), если нет, то undefined/ошибка (если память)
+            path_property: files[0].path, 
+            // Если есть, то будет LOG (если память), если нет, то undefined/ошибка (если диск)
+            buffer_size: files[0].buffer ? files[0].buffer.length : 'НЕТ БУФЕРА'
+        }); 
+    } else {
+        console.log("Файлы: НЕТ");
+    }
 
     if (!textTrimmed && files.length === 0) {
         return res.status(400).json({ message: "Пожалуйста, добавьте текст или файл(ы)!" });
@@ -62,7 +81,7 @@ export const createPost = async (req, res) => {
 
         let postData = {
             author: req.user._id,
-            text,
+            text: textTrimmed,
             hashtags: extractedTags,
             // ⭐ НОВЫЕ ПОЛЯ: Массивы для хранения путей всех медиа
             media: [], 
@@ -95,6 +114,8 @@ export const createPost = async (req, res) => {
         });
     } catch (error) {
         console.error("Ошибка при создании поста:", error);
+
+        console.error("--- 5. ОШИБКА CATCH В КОНТРОЛЛЕРЕ: ---", error); // ⭐ ЛОГ
         
         // ⭐ 4. УДАЛЕНИЕ ВСЕХ ЗАГРУЖЕННЫХ ФАЙЛОВ ПРИ ОШИБКЕ
         await cleanupFiles(req.files);
