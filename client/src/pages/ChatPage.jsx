@@ -70,7 +70,8 @@ function ChatPage() {
 
         if (receiverId) {
             // ⭐ 1. Загружаем историю чата и данные профиля собеседника
-            dispatch(getChatHistory(receiverId));
+            dispatch(resetMessages());
+            dispatch(getChatHistory({ receiverId, currentUserId: user._id }));
             dispatch(getUserById(receiverId));
 
             // ⭐ 2. Устанавливаем активный чат в Redux
@@ -96,7 +97,6 @@ function ChatPage() {
         
         // ⭐ Функция очистки (cleanup) при размонтировании компонента или смене receiverId
         return () => {
-            dispatch(resetMessages());
             dispatch(clearUserProfile());
             
             // ⭐ Важно: при выходе с ChatPage или переключении на другой чат:
