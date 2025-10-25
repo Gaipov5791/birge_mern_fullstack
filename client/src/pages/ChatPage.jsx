@@ -147,7 +147,7 @@ function ChatPage() {
     }
 
     return (
-        <div className="flex flex-col w-full h-screen bg-neutral-950"> 
+        <div className="flex flex-col w-full h-[88vh] bg-neutral-950"> 
             <div className="flex flex-col flex-grow mx-auto w-full 
             max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl 
             bg-neutral-800 rounded-xl shadow-2xl border border-neutral-700 
