@@ -156,41 +156,22 @@ export const markMessageAsRead = async (req, res) => {
             participants: { $all: [currentUserId, senderId] },
         });
 
-        if (!conversation) {
-            // Если диалог не найден, создаем его
-            conversation = await Conversation.create({
-                participants: [currentUserId, senderId],
-                unreadCounts: [
-                    { user: currentUserId, count: 0 },
-                    { user: senderId, count: 0 }
-                ]
-            });
-        } else {
-            // Если диалог найден, обновляем unreadCounts для текущего пользователя (читателя)
-            const readerUnreadEntry = conversation.unreadCounts.find(entry =>
-                entry.user.equals(currentUserId)
-            );
+        // ШАГ 1: Обновляем счетчик непрочитанных (ТОЛЬКО если Conversation существует)
+        if (conversation) {
+            const readerUnreadEntry = conversation.unreadCounts.find(entry =>
+                entry.user.equals(currentUserId)
+            );
 
-            if (readerUnreadEntry && readerUnreadEntry.count > 0) { // ⭐ Обновляем только если есть непрочитанные
-                readerUnreadEntry.count = 0;
-                await conversation.save(); // Сохраняем изменения в Conversation
-                console.log(`Unread count for user ${currentUserId} in conversation with ${senderId} reset to 0.`);
-
-                // ⭐ Оповещаем отправителя, что его счетчик непрочитанных был сброшен
-                // (если это отдельное событие, или включаем в messagesRead)
-                const senderSocketId = userSocketMap[senderId.toString()];
-                if (senderSocketId) {
-                    io.to(senderSocketId).emit('unreadCountReset', {
-                        readerId: currentUserId.toString(),
-                        senderId: senderId.toString(),
-                        conversationId: conversation._id.toString()
-                    });
-                    console.log(`Event 'unreadCountReset' EMITTED to ${senderId}.`);
-                }
-            } else if (!readerUnreadEntry) { // Если запись не найдена, но должна быть
-                 conversation.unreadCounts.push({ user: currentUserId, count: 0 });
-                 await conversation.save();
-            }
+            if (readerUnreadEntry && readerUnreadEntry.count > 0) {
+                readerUnreadEntry.count = 0;
+                await conversation.save();
+                console.log(`Unread count reset for user ${currentUserId}.`);
+                // ⭐ ТЕПЕРЬ НЕ ОТПРАВЛЯЕМ unreadCountReset ОТДЕЛЬНО
+            } else if (!readerUnreadEntry) {
+                 // Если диалог есть, но записи нет (редкий случай)
+                conversation.unreadCounts.push({ user: currentUserId, count: 0 });
+                await conversation.save();
+            }
         }
         
         conversationId = conversation._id;
