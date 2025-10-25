@@ -71,7 +71,7 @@ function ChatPage() {
         if (receiverId) {
             // ⭐ 1. Загружаем историю чата и данные профиля собеседника
             dispatch(resetMessages());
-            dispatch(getChatHistory({ receiverId, currentUserId: user._id }));
+            dispatch(getChatHistory(receiverId));
             dispatch(getUserById(receiverId));
 
             // ⭐ 2. Устанавливаем активный чат в Redux
