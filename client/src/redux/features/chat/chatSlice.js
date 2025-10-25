@@ -174,7 +174,20 @@ const chatSlice = createSlice({
                 state.error = null;
             })
             .addCase(markMessagesAsRead.fulfilled, (state, action) => {
-                
+                const { readerId } = action.payload;
+                // ⭐ ОБНОВИТЬ: Промаркировать все входящие сообщения как прочитанные
+                state.messages.forEach(message => {
+                    const messageReceiverId = message.receiver && typeof message.receiver === 'object' ? message.receiver._id : message.receiver;
+                    
+                    // Если сообщение адресовано нам (мы — читатель) и еще не прочитано нами
+                    if (messageReceiverId === readerId && !message.readBy.includes(readerId)) {
+                        message.readBy.push(readerId);
+                        // Дополнительно можно обновить delivered, если это необходимо
+                        if (!message.delivered) {
+                            message.delivered = true;
+                        }
+                    }
+                });
             })
             .addCase(markMessagesAsRead.rejected, (state, action) => {
                 state.isError = true;
