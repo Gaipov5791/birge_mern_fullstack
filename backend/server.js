@@ -84,7 +84,7 @@ const io = new Server(server, {
 });
 
 const disconnectTimeouts = {}; // 30 секунд
-const RECONNECT_DELAY = 3000; // 10 секунд
+const RECONNECT_DELAY = 10000; // 10 секунд
 
 const userSocketMap = {}; // userId -> socketId
 
