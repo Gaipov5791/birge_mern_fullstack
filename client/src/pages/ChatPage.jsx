@@ -36,7 +36,9 @@ function ChatPage() {
         error: chatError, 
         isReceiverTyping 
     } = useSelector((state) => state.chat); 
+
     const { user } = useSelector((state) => state.auth);
+    
     const { 
         isLoading: isProfileLoading, 
         isError: isProfileError, 
@@ -71,7 +73,7 @@ function ChatPage() {
         if (receiverId) {
             // ⭐ 1. Загружаем историю чата и данные профиля собеседника
             dispatch(resetMessages());
-            dispatch(getChatHistory(receiverId));
+            dispatch(getChatHistory({ receiverId, currentUserId: user._id }));
             dispatch(getUserById(receiverId));
 
             // ⭐ 2. Устанавливаем активный чат в Redux

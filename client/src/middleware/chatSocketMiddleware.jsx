@@ -63,6 +63,13 @@ export const chatSocketMiddleware = (store) => (next) => (action) => {
             const currentUserId = store.getState().auth.user?._id;
             const activeChatWithId = store.getState().chat.activeChatWith;
 
+            // ⭐ НОВОЕ УСЛОВИЕ: Игнорируем, если мы сами отправили это сообщение
+            if (newMessage.sender._id === currentUserId) {
+                console.log('Получено собственное сообщение. Игнорируем логику прочтения/уведомлений.');
+                // Только добавляем его через addMessage(newMessage) выше
+                return; 
+            }
+
             // Если это сообщение для текущего пользователя (он получатель)
             // И он находится в активном чате с отправителем этого сообщения
             if (newMessage.receiver._id === currentUserId && activeChatWithId === newMessage.sender._id) {
