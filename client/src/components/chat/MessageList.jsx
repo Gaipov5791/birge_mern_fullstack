@@ -88,27 +88,34 @@ const MessageList = ({ openConfirmModal, closeConfirmModal, receiverData }) => {
     // Прокручиваем вниз при загрузке сообщений
     useEffect(scrollToBottom, [messages]);
 
+    // ⭐ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Фильтрация null/undefined сообщений
+    const validMessages = messages.filter(msg => msg != null);
+
     return (
         // ⭐ Новый стильный скроллбар и небольшой фон, если MessageList не заполнен
         <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-neutral-800 custom-scrollbar scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-neutral-800">
-            {messages.map((message, index) => {
+            {validMessages.map((message, index) => {
+
+                // Проверка на случай, если сообщение по какой-то причине не имеет _id
+                if (!message._id) {
+                    console.error("Сообщение без _id пропущено при рендеринге:", message);
+                    return null; 
+                }
+
                 const senderId = message.sender && typeof message.sender === 'object' ? message.sender._id : message.sender;
                 const isMyMessage = senderId === user._id;
                 const senderData = isMyMessage ? user : receiverData;
 
-                const previousMessage = messages[index - 1];
-                const isPreviousSenderSame = previousMessage && (
-                    (previousMessage.sender && typeof previousMessage.sender === 'object' && previousMessage.sender._id === senderId) || 
-                    (previousMessage.sender === senderId)
-                );
-                // Определяем, нужно ли отображать аватар и скругление верхнего угла.
+                const currentMessageIndexInValid = validMessages.findIndex(m => m._id === message._id);
+                const previousMessage = validMessages[currentMessageIndexInValid - 1];
+                const nextMessage = validMessages[currentMessageIndexInValid + 1];
+
+                // Мы также должны убедиться, что обращаемся к свойствам sender безопасно
+                const getSenderId = (msg) => msg.sender && (typeof msg.sender === 'object' ? msg.sender._id : msg.sender);
+                const isPreviousSenderSame = previousMessage && (getSenderId(previousMessage) === senderId);
+                const isNextSenderSame = nextMessage && (getSenderId(nextMessage) === senderId);
+
                 const isFirstMessageOfGroup = !isPreviousSenderSame;
-                // Определяем, нужно ли отображать скругление нижнего угла.
-                const nextMessage = messages[index + 1];
-                const isNextSenderSame = nextMessage && (
-                    (nextMessage.sender && typeof nextMessage.sender === 'object' && nextMessage.sender._id === senderId) || 
-                    (nextMessage.sender === senderId)
-                );
                 const isLastMessageOfGroup = !isNextSenderSame;
 
                 const messageTime = message.createdAt

@@ -66,7 +66,17 @@ const ChatHeader = ({openConfirmModal, closeConfirmModal}) => {
                 setLoadingMessage("Удаление всех сообщений..."); 
                 setIsHeaderLoading(true); 
                 try {
-                    const messageIds = messages.map(msg => msg._id);
+                    // ⭐ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Фильтруем null/undefined сообщения
+                    const messageIds = messages
+                        .filter(msg => msg != null) // Исключаем все null/undefined
+                        .map(msg => msg._id);     // Теперь безопасно читаем _id
+                    
+                    // Проверка на случай, если массив оказался пустым после фильтрации
+                    if (messageIds.length === 0) {
+                        console.log('Нет сообщений для удаления.');
+                        setIsHeaderLoading(false);
+                        return;
+                    }
                     await dispatch(deleteAllMessagesForEveryone({ messageIds, receiverId })).unwrap();
                     console.log('Все сообщения успешно удалены для всех.');
                 } catch (error) {

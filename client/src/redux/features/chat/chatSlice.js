@@ -87,13 +87,17 @@ const chatSlice = createSlice({
         },
         deleteMessages: (state, action) => {
             const deletedMessageIds = action.payload.messageIds;
-            state.messages = state.messages.filter(msg => !deletedMessageIds.includes(msg._id));
+            state.messages = state.messages
+                .filter(msg => msg != null) // Убедимся, что нет null в массиве
+                .filter(msg => !deletedMessageIds.includes(msg._id));
         },
         updateMessage: (state, action) => {
             const updatedMessage = action.payload;
-            state.messages = state.messages.map(msg =>
-                msg._id === updatedMessage._id ? updatedMessage : msg
-            );
+            state.messages = state.messages
+                .filter(msg => msg != null) // Убедимся, что нет null в массиве
+                .map(msg =>
+                    msg._id === updatedMessage._id ? updatedMessage : msg
+                );
         },
         setOnlineUsers: (state, action) => {
             state.onlineUsers = action.payload;
@@ -229,7 +233,11 @@ const chatSlice = createSlice({
             })
             .addCase(fetchUnreadConversationsSummary.fulfilled, (state, action) => {
                 state.isLoadingNotifications = false;
-                state.unreadNotificationsSummary = Array.isArray(action.payload) ? action.payload : [];
+                
+                // ⭐ ИСПРАВЛЕНИЕ: Фильтруем null/undefined элементы в массиве перед записью
+                const validPayload = Array.isArray(action.payload) ? action.payload.filter(item => item != null && item.senderId) : [];
+                
+                state.unreadNotificationsSummary = validPayload;
             })
             .addCase(fetchUnreadConversationsSummary.rejected, (state, action) => {
                 state.isLoadingNotifications = false;
