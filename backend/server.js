@@ -81,6 +81,15 @@ const io = new Server(server, {
         methods: ['GET', 'POST'],
         credentials: true // Добавьте это для Socket.IO, если вы используете куки/сессии
     },
+    // ⭐ УВЕЛИЧИВАЕМ ТАЙМАУТЫ ДЛЯ СТАБИЛЬНОСТИ
+    // Socket.IO ожидает эти значения в миллисекундах.
+    // Значение по умолчанию: pingTimeout: 20000, pingInterval: 25000
+    // Мы увеличиваем их, чтобы предотвратить 400 Bad Request при re-polling.
+    pingTimeout: 60000,   // 60 секунд ожидания ответа клиента на пинг
+    pingInterval: 25000,  // Каждые 25 секунд отправляем пинг
+    
+    // Также полезно указать transport, хотя 'polling' используется по умолчанию
+    transports: ['websocket', 'polling']
 });
 
 const disconnectTimeouts = {}; // 30 секунд
