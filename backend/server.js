@@ -98,16 +98,22 @@ io.on('connection', (socket) => {
     const userId = socket.handshake.query.userId;
 
     if (userId) {
+        // ⭐ ЛОГ 1: Показывает, что происходит при подключении
+        console.log(`[SOCKET CONNECT] User ${userId} connected with new ID: ${socket.id}.`);
+
         userSocketMap[userId] = socket.id;
-        console.log(`Пользователь подключен: ${socket.id} (ID: ${userId})`);
-        console.log('Пользователи в сети:', Object.keys(userSocketMap));
+
+        console.log('--- Current userSocketMap (after connect) ---');
+        console.log(userSocketMap);
+        console.log('-------------------------------------------');
 
         // Сохраняем userId в данных сокета
         socket.data.userId = userId; // ⭐ Сохраняем userId в socket.data
         socket.data.activeChatWith = null; // ⭐ Инициализируем activeChatWith
 
-        socket.emit('onlineUsers', Object.keys(userSocketMap));
-        socket.broadcast.emit('userStatus', { userId, isOnline: true });
+        const onlineUserIds = Object.keys(userSocketMap);
+        console.log(`[SOCKET INIT] Emitting 'onlineUsers' to ${userId}. List size: ${onlineUserIds.length}`);
+        socket.emit('onlineUsers', onlineUserIds);
     }
 
     // Логика оповещения о доставке сообщений
@@ -277,17 +283,20 @@ io.on('connection', (socket) => {
         if (disconnectedUserId) {
             // ⭐ КРИТИЧЕСКАЯ ПРОВЕРКА: Удаляйте только, если этот socket.id действительно был последним
             if (userSocketMap[disconnectedUserId] === socket.id) {
+                // ⭐ ЛОГ 3: Фиксируем успешное удаление
+                console.log(`[SOCKET DISCONNECT] Successfully removing user ${disconnectedUserId} from map.`);
                 delete userSocketMap[disconnectedUserId];
                 
                 // Оповещаем остальных
                 socket.broadcast.emit('userStatus', { userId: disconnectedUserId, isOnline: false });
             } else {
-                // Это может произойти, если пользователь быстро переподключился, и новое соединение
-                // уже обновило userSocketMap. Здесь удалять ничего не нужно.
-                console.log(`Socket ${socket.id} отключен, но ${disconnectedUserId} уже имеет новый сокет ID.`);
+                // ⭐ ЛОГ 4: Фиксируем, что пользователь уже переподключился
+                console.log(`[SOCKET DISCONNECT] User ${disconnectedUserId} is already reconnected with a new socket ID. Skipping deletion.`);
             }
         }
-        console.log('Пользователи в сети:', Object.keys(userSocketMap));
+        console.log('--- Current userSocketMap (after disconnect) ---');
+        console.log(userSocketMap);
+        console.log('------------------------------------------------');
     });
 });
 

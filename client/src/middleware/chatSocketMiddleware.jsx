@@ -87,12 +87,20 @@ export const chatSocketMiddleware = (store) => (next) => (action) => {
         });
 
         socket.on('onlineUsers', (users) => {
+            // ⭐ ЛОГ 5: Фиксируем получение
+            console.log(`[CLIENT SOCKET] Received 'onlineUsers' list. Total: ${users.length}. First 3: ${users.slice(0, 3).join(', ')}`);
             store.dispatch(setOnlineUsers(users));
         });
 
         socket.on('userStatus', ({ userId, isOnline }) => {
+            // ⭐ ЛОГ 6: Фиксируем изменение
+            console.log(`[CLIENT SOCKET] Received 'userStatus' for ${userId}. Is Online: ${isOnline}`);
+
             const prevUsers = store.getState().chat.onlineUsers;
             const newUsers = isOnline ? [...new Set([...prevUsers, userId])] : prevUsers.filter((id) => id !== userId);
+            
+            // ⭐ ЛОГ 7: Показываем, что было в Redux до/после
+            console.log(`[CLIENT SOCKET] Prev online count: ${prevUsers.length}. New online count: ${newUsers.length}`);
             store.dispatch(setOnlineUsers(newUsers));
         });
 
