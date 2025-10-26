@@ -128,56 +128,12 @@ io.on('connection', (socket) => {
     }).catch(err => console.error('Ошибка при проверке недоставленных сообщений:', err));
 
     // ⭐ НОВЫЙ ОБРАБОТЧИК: Пользователь присоединяется к чату (открывает ChatPage)
-    socket.on('joinChat', async ({ receiverId }) => {
+    socket.on('joinChat', ({ receiverId }) => {
         if (socket.data.userId && receiverId) {
-            socket.data.activeChatWith = receiverId; // Устанавливаем активный чат
+            // ОСТАВЛЯЕМ ТОЛЬКО ЭТО: Устанавливаем активный чат, чтобы не отправлять newUnreadMessage
+            socket.data.activeChatWith = receiverId; 
             console.log(`User ${socket.data.userId} joined chat with ${receiverId}`);
-
-            // ⭐ ЛОГИКА СБРОСА УВЕДОМЛЕНИЙ ПРИ ВХОДЕ В ЧАТ
-            try {
-                // Ищем диалог между текущим пользователем и receiverId
-                const conversation = await Conversation.findOneAndUpdate(
-                    {
-                        participants: { $all: [socket.data.userId, receiverId] }
-                    },
-                    {
-                        // Обнуляем счетчик непрочитанных для текущего пользователя в этом диалоге
-                        $set: { "unreadCounts.$[elem].count": 0 }
-                    },
-                    {
-                        arrayFilters: [{ "elem.user": socket.data.userId }],
-                        new: true // Вернуть обновленный документ
-                    }
-                );
-                
-                if (conversation) {
-                    // Обновляем readBy для всех сообщений, которые текущий пользователь не прочитал
-                    await Chat.updateMany(
-                        { 
-                            sender: receiverId, // Сообщения, отправленные собеседником
-                            receiver: socket.data.userId, // Полученные текущим пользователем
-                            readBy: { $ne: socket.data.userId } // Ещё не прочитанные
-                        },
-                        { 
-                            $addToSet: { readBy: socket.data.userId } // Добавляем текущего пользователя в readBy
-                        }
-                    );
-
-                    console.log(`Unread count for user ${socket.data.userId} in conversation with ${receiverId} reset.`);
-                    // Если нужно оповестить отправителя, что сообщения прочитаны
-                    const senderSocketId = getReceiverSocketId(receiverId);
-                    if (senderSocketId) {
-                        io.to(senderSocketId).emit('messagesRead', { 
-                            readerId: socket.data.userId, 
-                            conversationId: conversation._id,
-                            receiverId: socket.data.userId, // ID того, кто прочитал
-                            senderId: receiverId // ID того, чьи сообщения прочитали
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Ошибка при сбросе уведомлений при входе в чат:', error);
-            }
+            // Вся логика DB-обновления и messagesRead должна быть в HTTP-контроллере markMessagesAsRead
         }
     });
 
@@ -204,6 +160,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ОБРАБОТЧИК ОТПРАВКИ СООБЩЕНИЯ
     socket.on('sendMessage', async (messageData) => {
         const { sender, receiver, text } = messageData;
         const senderId = new mongoose.Types.ObjectId(sender);
@@ -234,7 +191,7 @@ io.on('connection', (socket) => {
                 receiver: receiverId,
                 text,
                 delivered: isReceiverOnline,
-                readBy: [senderId], // Отправитель всегда "читает" свое сообщение
+                readBy: [], // Отправитель всегда "читает" свое сообщение
                 conversation: conversation._id // Связываем сообщение с диалогом
             });
 
@@ -310,20 +267,25 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Обработка отключения
     socket.on('disconnect', () => {
         console.log(`Пользователь отключен: ${socket.id}`);
-        let disconnectedUserId = null;
-
-        for (const userId in userSocketMap) {
-            if (userSocketMap[userId] === socket.id) {
-                disconnectedUserId = userId;
-                delete userSocketMap[userId];
-                break;
-            }
-        }
+        
+        // ⭐ ИСПРАВЛЕНИЕ: Используйте сохраненный userId
+        const disconnectedUserId = socket.data.userId; 
 
         if (disconnectedUserId) {
-            socket.broadcast.emit('userStatus', { userId: disconnectedUserId, isOnline: false });
+            // ⭐ КРИТИЧЕСКАЯ ПРОВЕРКА: Удаляйте только, если этот socket.id действительно был последним
+            if (userSocketMap[disconnectedUserId] === socket.id) {
+                delete userSocketMap[disconnectedUserId];
+                
+                // Оповещаем остальных
+                socket.broadcast.emit('userStatus', { userId: disconnectedUserId, isOnline: false });
+            } else {
+                // Это может произойти, если пользователь быстро переподключился, и новое соединение
+                // уже обновило userSocketMap. Здесь удалять ничего не нужно.
+                console.log(`Socket ${socket.id} отключен, но ${disconnectedUserId} уже имеет новый сокет ID.`);
+            }
         }
         console.log('Пользователи в сети:', Object.keys(userSocketMap));
     });

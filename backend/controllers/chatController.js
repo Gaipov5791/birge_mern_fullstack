@@ -39,7 +39,7 @@ export const sendMessage = async (req, res) => {
             receiver: receiverId,
             text,
             delivered: isReceiverOnline,
-            readBy: [senderId],
+            readBy: [],
             conversation: conversation._id, // ⭐ ДОБАВЛЕНО ЭТО ПОЛЕ
         });
 
