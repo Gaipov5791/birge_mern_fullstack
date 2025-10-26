@@ -98,7 +98,18 @@ export const chatSocketMiddleware = (store) => (next) => (action) => {
         });
 
         socket.on('userStatus', ({ userId, isOnline }) => {
-            // ⭐ ЛОГ 6: Фиксируем изменение
+            // Получаем текущего пользователя из Redux
+            const currentUserId = store.getState().auth.user?._id;
+
+            // ⭐ КРИТИЧЕСКАЯ СТРАХОВКА: Игнорируем userStatus для себя самого
+            // Сервер должен отправлять broadcast, который не должен попадать к нам,
+            // но если попадает из-за особенностей сети, мы его игнорируем.
+            if (userId === currentUserId) {
+                console.warn(`[CLIENT SOCKET] Ignored self-status update for ${userId} (isOnline: ${isOnline}) to prevent conflicts.`);
+                return;
+            }
+
+            // ⭐ ЛОГ 6: Фиксируем изменение (оставляем для отладки)
             console.log(`[CLIENT SOCKET] Received 'userStatus' for ${userId}. Is Online: ${isOnline}`);
 
             const prevUsers = store.getState().chat.onlineUsers;
