@@ -48,7 +48,11 @@ const chatSlice = createSlice({
             console.log('Редюсер updateMessagesReadStatus вызван. Payload:', action.payload);
 
             let messagesUpdatedCount = 0;
-            state.messages.forEach(message => {
+            state.messages.filter(msg => msg != null).forEach(message => {
+                if (!message._id) {
+                    console.warn('Пропущено сообщение без _id в Redux:', message);
+                    return; // Пропускаем элемент
+                }
                 const messageSenderId = message.sender && typeof message.sender === 'object' ? message.sender._id : message.sender;
                 const messageReceiverId = message.receiver && typeof message.receiver === 'object' ? message.receiver._id : message.receiver;
 
@@ -74,7 +78,7 @@ const chatSlice = createSlice({
         },
         updateMessagesDeliveredStatus: (state, action) => {
             const { senderId } = action.payload;
-            state.messages.forEach(message => {
+            state.messages.filter(msg => msg != null).forEach(message => {
                 const messageSenderId = message.sender && typeof message.sender === 'object' ? message.sender._id : message.sender;
                 if (messageSenderId === senderId && !message.delivered) {
                     message.delivered = true;
@@ -147,10 +151,14 @@ const chatSlice = createSlice({
             })
             .addCase(getChatHistory.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const { messages, currentUserId } = action.payload;
-                state.messages = messages.filter(msg => {
-                    return !msg.deletedBy.includes(currentUserId);
-                });
+                const { messages, currentUserId } = action.payload;
+                
+                // ⭐ ДОБАВЛЕНИЕ: Фильтруем любые null/undefined сообщения 
+                const validMessages = messages.filter(msg => msg != null);
+
+                state.messages = validMessages.filter(msg => {
+                    return !msg.deletedBy.includes(currentUserId);
+                });
             })
             .addCase(getChatHistory.rejected, (state, action) => {
                 state.isLoading = false;
