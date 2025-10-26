@@ -84,6 +84,11 @@ export const chatSocketMiddleware = (store) => (next) => (action) => {
                 // Не нужно dispatch addOrUpdateNotification здесь, так как это событие обрабатывается
                 // через socket.on('newUnreadMessage')
             }
+
+            // Добавлен ИГНОР для самого себя
+            if (newMessage.sender._id === currentUserId) {
+                return; 
+            }
         });
 
         socket.on('onlineUsers', (users) => {
@@ -98,7 +103,7 @@ export const chatSocketMiddleware = (store) => (next) => (action) => {
 
             const prevUsers = store.getState().chat.onlineUsers;
             const newUsers = isOnline ? [...new Set([...prevUsers, userId])] : prevUsers.filter((id) => id !== userId);
-            
+
             // ⭐ ЛОГ 7: Показываем, что было в Redux до/после
             console.log(`[CLIENT SOCKET] Prev online count: ${prevUsers.length}. New online count: ${newUsers.length}`);
             store.dispatch(setOnlineUsers(newUsers));

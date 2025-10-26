@@ -98,9 +98,12 @@ io.on('connection', (socket) => {
     const userId = socket.handshake.query.userId;
 
     if (userId) {
-        // ⭐ ЛОГ 1: Показывает, что происходит при подключении
         console.log(`[SOCKET CONNECT] User ${userId} connected with new ID: ${socket.id}.`);
 
+        // ⭐ ИСПРАВЛЕНИЕ 1: Проверяем, был ли пользователь уже онлайн
+        const wasOnline = !!userSocketMap[userId];
+        
+        // КРИТИЧЕСКИЙ ШАГ: Всегда обновляем карту на новый socket.id
         userSocketMap[userId] = socket.id;
 
         console.log('--- Current userSocketMap (after connect) ---');
@@ -108,12 +111,20 @@ io.on('connection', (socket) => {
         console.log('-------------------------------------------');
 
         // Сохраняем userId в данных сокета
-        socket.data.userId = userId; // ⭐ Сохраняем userId в socket.data
-        socket.data.activeChatWith = null; // ⭐ Инициализируем activeChatWith
+        socket.data.userId = userId; 
+        socket.data.activeChatWith = null; 
 
+        // 1. Отправляем полный список онлайн-пользователей НОВОМУ сокету
         const onlineUserIds = Object.keys(userSocketMap);
         console.log(`[SOCKET INIT] Emitting 'onlineUsers' to ${userId}. List size: ${onlineUserIds.length}`);
         socket.emit('onlineUsers', onlineUserIds);
+
+        // 2. ⭐ ИСПРАВЛЕНИЕ 2: Оповещаем ВСЕХ остальных о входе ТОЛЬКО в случае, если он был OFFLINE
+        // Если wasOnline = true, это просто переподключение, и всем уже известно, что он онлайн.
+        if (!wasOnline) {
+             console.log(`[SOCKET BROADCAST] User ${userId} went ONLINE. Notifying others.`);
+             socket.broadcast.emit('userStatus', { userId, isOnline: true });
+        }
     }
 
     // Логика оповещения о доставке сообщений
