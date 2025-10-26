@@ -33,13 +33,13 @@ export const getChatList = createAsyncThunk(
 // Асинхронный thunk для получения истории чата
 export const getChatHistory = createAsyncThunk(
     'chat/getChatHistory',
-    async (receiverId, thunkAPI) => {
+    async ({ receiverId, currentUserId }, thunkAPI) => {
         try {
             const token = thunkAPI.getState().auth.token;
             // Возвращаем данные, которые будут доступны в action.payload
             const data = await chatService.getChatHistory(receiverId, token);
             // Возвращаем данные вместе с ID текущего пользователя для фильтрации
-            return { messages: data, currentUserId: thunkAPI.getState().auth.user._id };
+            return { messages: data, currentUserId: currentUserId };
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
         }
