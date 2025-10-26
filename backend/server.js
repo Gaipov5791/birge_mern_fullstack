@@ -83,11 +83,14 @@ const io = new Server(server, {
     },
 });
 
+const disconnectTimeouts = {}; // 30 секунд
+const RECONNECT_DELAY = 3000; // 10 секунд
+
 const userSocketMap = {}; // userId -> socketId
 
 
 const getReceiverSocketId = (receiverId) => {
-    return userSocketMap[receiverId];
+    return userSocketMap[receiverId.toString()];
 };
 
 const notifyAllUsersAboutStatus = (userId, isOnline) => {
@@ -113,6 +116,13 @@ io.on('connection', (socket) => {
         // Сохраняем userId в данных сокета
         socket.data.userId = userId; 
         socket.data.activeChatWith = null; 
+
+        // ⭐ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Отменяем ожидающий таймаут при подключении
+        if (disconnectTimeouts[userId]) {
+            clearTimeout(disconnectTimeouts[userId]);
+            delete disconnectTimeouts[userId];
+            console.log(`[TIMEOUT CANCEL] User ${userId} reconnected successfully. Disconnect timeout cancelled.`);
+        }
 
         // 1. Отправляем полный список онлайн-пользователей НОВОМУ сокету
         const onlineUserIds = Object.keys(userSocketMap);
@@ -294,20 +304,36 @@ io.on('connection', (socket) => {
         if (disconnectedUserId) {
             // ⭐ КРИТИЧЕСКАЯ ПРОВЕРКА: Удаляйте только, если этот socket.id действительно был последним
             if (userSocketMap[disconnectedUserId] === socket.id) {
-                // ⭐ ЛОГ 3: Фиксируем успешное удаление
-                console.log(`[SOCKET DISCONNECT] Successfully removing user ${disconnectedUserId} from map.`);
-                delete userSocketMap[disconnectedUserId];
                 
-                // Оповещаем остальных
-                socket.broadcast.emit('userStatus', { userId: disconnectedUserId, isOnline: false });
+                // ⭐ ИСПРАВЛЕНИЕ: Ставим удаление и оповещение в очередь
+                console.log(`[TIMEOUT START] User ${disconnectedUserId} lost connection. Waiting ${RECONNECT_DELAY}ms before marking OFFLINE.`);
+
+                disconnectTimeouts[disconnectedUserId] = setTimeout(() => {
+                    
+                    // Проверяем еще раз, не успел ли пользователь переподключиться
+                    if (userSocketMap[disconnectedUserId] === socket.id) {
+                        console.log(`[TIMEOUT EXPIRED] User ${disconnectedUserId} failed to reconnect. Removing from map.`);
+                        delete userSocketMap[disconnectedUserId];
+                        
+                        // Оповещаем остальных о выходе
+                        socket.broadcast.emit('userStatus', { userId: disconnectedUserId, isOnline: false });
+                    } else {
+                        console.log(`[TIMEOUT SKIPPED] User ${disconnectedUserId} reconnected during timeout. Skipping OFFLINE broadcast.`);
+                    }
+                    
+                    delete disconnectTimeouts[disconnectedUserId]; // Очистка таймаута
+                    
+                    // Логи для отслеживания состояния
+                    console.log('--- Current userSocketMap (after disconnect timeout) ---');
+                    console.log(userSocketMap);
+                    console.log('-------------------------------------------------------');
+                    
+                }, RECONNECT_DELAY);
+                
             } else {
-                // ⭐ ЛОГ 4: Фиксируем, что пользователь уже переподключился
                 console.log(`[SOCKET DISCONNECT] User ${disconnectedUserId} is already reconnected with a new socket ID. Skipping deletion.`);
             }
         }
-        console.log('--- Current userSocketMap (after disconnect) ---');
-        console.log(userSocketMap);
-        console.log('------------------------------------------------');
     });
 });
 
