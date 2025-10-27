@@ -102,7 +102,18 @@ const fetchUnreadConversationsSummary = async (token) => {
 };
 
 
-
+// Активация чата (для гарантии коммуникации с сервером)
+const activateChat = async (receiverId, token) => {
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    };
+    // Отправляем PUT запрос на новый легкий эндпоинт. 
+    // На сервере этот эндпоинт просто возвращает 200 OK.
+    const response = await axios.put(`${API_URL}activate/${receiverId}`, {}, config);
+    return response.data;
+};
 
 
 const chatService = {
@@ -112,7 +123,8 @@ const chatService = {
     clearChat,
     deleteMessageForEveryone,
     deleteAllMessagesForEveryone,
-    fetchUnreadConversationsSummary
+    fetchUnreadConversationsSummary,
+    activateChat,
 };
 
 export default chatService;

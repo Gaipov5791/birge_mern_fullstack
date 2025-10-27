@@ -197,3 +197,23 @@ export const fetchUnreadConversationsSummary = createAsyncThunk(
         }
     }
 ); 
+
+// Асинхронный thunk для активации чата
+export const activateChat = createAsyncThunk(
+    'chat/activateChatConnection',
+    async (receiverId, thunkAPI) => {
+        try {
+            
+            if (!token) {
+                return thunkAPI.rejectWithValue('Нет токена авторизации');
+            }
+
+            const token = thunkAPI.getState().auth.token;
+            const data = await chatService.activateChat(receiverId, token);
+            return data;
+        } catch (error) {
+            const message = error.response?.data?.message || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);

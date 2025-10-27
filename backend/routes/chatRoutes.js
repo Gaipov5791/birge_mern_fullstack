@@ -6,7 +6,8 @@ import {
     markMessageAsRead, 
     clearChat,
     deleteMessageForEveryone,
-    deleteAllMessagesForEveryone, 
+    deleteAllMessagesForEveryone,
+    activateChatConnection 
 } from "../controllers/chatController.js";
 
 const router = express.Router();
@@ -22,6 +23,10 @@ router.post("/messages", protect, sendMessage);
 // Маршрут для пометки сообщения как прочитанного
 // PUT /api/chat/messages/read/:senderId
 router.put("/messages/read/:senderId", protect, markMessageAsRead);
+
+// Активация чата для сигнализации активности
+// PUT /api/chat/activate/:receiverId
+router.put("/activate/:receiverId", protect, activateChatConnection);
 
 // Маршрут для очистки чата между двумя пользователями
 // DELETE /api/chat/clear/:receiverId

@@ -254,6 +254,31 @@ export const clearChat = async (req, res) => {
     }
 };
 
+// @desc    Активировать соединение чата и сигнализировать активность
+// @route   PUT /api/chat/activate/:receiverId
+// @access  Private
+export const activateChatConnection = async (req, res) => {
+    const { receiverId } = req.params;
+    const currentUserId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+        return res.status(400).json({ message: 'Некорректный ID получателя.' });
+    }
+
+    try {
+        console.log(`Пользователь ${currentUserId} активировал чат с ${receiverId}.`);
+        
+        res.status(200).json({ 
+            message: 'Активация чата успешна. Статус активности подтвержден.',
+            receiverId: receiverId,
+            currentUserId: currentUserId
+        });
+    } catch (error) {
+        console.error('Ошибка при активации чата:', error);
+        res.status(500).json({ message: 'Ошибка при активации чата.', error: error.message });
+    }
+};
+
 
 // @desc    Удалить одно сообщение для всех
 // @route   DELETE /api/chat/message/:messageId
@@ -352,3 +377,5 @@ export const deleteAllMessagesForEveryone = async (req, res) => {
         res.status(500).json({ message: 'Ошибка сервера при удалении сообщений.' });
     }
 };
+
+

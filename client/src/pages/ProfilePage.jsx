@@ -6,7 +6,7 @@ import {
     reset as resetAuthSlice,
     setUserProfile,
 } from '../redux/features/auth/authSlice';
-import { clearNotificationForSender } from '../redux/features/chat/chatSlice';
+import { clearNotificationForSender, setActiveChat } from '../redux/features/chat/chatSlice';
 import axios from 'axios';
 
 import { getUserPosts } from '../redux/features/posts/postThunks';
@@ -31,6 +31,7 @@ function ProfilePage() {
     const targetUserId = id || currentUser?._id; 
 
     const { user: currentUser, userProfile } = useSelector((state) => state.auth);
+    const { activeChat } = useSelector((state) => state.chat);
     
     // Оставлены только состояния, связанные с загрузкой профиля и постами, и редактированием BIO
     const [profileLoading, setProfileLoading] = useState(true);
@@ -50,14 +51,20 @@ function ProfilePage() {
 
     // ⭐ ОСТАВЛЕН: Обработчик перехода в чат
     const handleGoToChat = useCallback(() => {
-        if (id) {
-            dispatch(markMessagesAsRead(id));
-            dispatch(clearNotificationForSender(id));
-            navigate(`/chat/${id}`);
-        } else {
-            dispatch(toastError('Невозможно перейти в чат: отсутствует ID пользователя.'));
-        }
-        }, [dispatch, navigate, id]);
+        if (id) {
+            // 1. Диспетчим Thunk. Promise (then) гарантирует, что навигация 
+            //    начнется только после завершения запроса к серверу.
+            dispatch(activeChat(id)).then(() => {
+                
+                // 2. Дополнительно диспетчим обычный редьюсер для Redux-состояния
+                //    (это очень важно для внутренней логики фронтенда)
+                dispatch(setActiveChat(id)); // <-- ВАЖНО: Используйте ваш редьюсер setActiveChat
+
+                // 3. Навигируем
+                navigate(`/chat/${id}`);
+            });
+        }
+    }, [id, navigate, dispatch]);
     
     // ⭐ ОСТАВЛЕН: handleSaveProfile (для био)
     const handleSaveProfile = useCallback(async () => {
