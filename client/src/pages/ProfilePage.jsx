@@ -31,7 +31,7 @@ function ProfilePage() {
     const targetUserId = id || currentUser?._id; 
 
     const { user: currentUser, userProfile } = useSelector((state) => state.auth);
-    const { activeChat } = useSelector((state) => state.chat);
+    const { activateChat } = useSelector((state) => state.chat);
     
     // Оставлены только состояния, связанные с загрузкой профиля и постами, и редактированием BIO
     const [profileLoading, setProfileLoading] = useState(true);
@@ -54,7 +54,7 @@ function ProfilePage() {
         if (id) {
             // 1. Диспетчим Thunk. Promise (then) гарантирует, что навигация 
             //    начнется только после завершения запроса к серверу.
-            dispatch(activeChat(id)).then(() => {
+            dispatch(activateChat(id)).then(() => {
                 
                 // 2. Дополнительно диспетчим обычный редьюсер для Redux-состояния
                 //    (это очень важно для внутренней логики фронтенда)
