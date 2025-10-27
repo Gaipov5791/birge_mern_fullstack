@@ -10,14 +10,14 @@ import { clearNotificationForSender, setActiveChat } from '../redux/features/cha
 import axios from 'axios';
 
 import { getUserPosts } from '../redux/features/posts/postThunks';
-import { markMessagesAsRead } from '../redux/features/chat/chatThunks';
+import { markMessagesAsRead, activateChatConnection } from '../redux/features/chat/chatThunks';
 
 // Обновленный импорт: ProfileActions вместо ProfileHeader
 import ProfileActions from '../components/profile/ProfileActions'; // ⭐ НОВЫЙ ИМПОРТ
 import ProfileBio from '../components/profile/ProfileBio';
 import ProfilePostsSection from '../components/profile/ProfilePostsSection';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
-import { toastError } from '../redux/features/notifications/notificationSlice';
+import { toastError, toastSuccess } from '../redux/features/notifications/notificationSlice';
 
 // Получаем базовый URL API из переменной окружения
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -31,7 +31,6 @@ function ProfilePage() {
     const targetUserId = id || currentUser?._id; 
 
     const { user: currentUser, userProfile } = useSelector((state) => state.auth);
-    const { activateChat } = useSelector((state) => state.chat);
     
     // Оставлены только состояния, связанные с загрузкой профиля и постами, и редактированием BIO
     const [profileLoading, setProfileLoading] = useState(true);
@@ -49,27 +48,33 @@ function ProfilePage() {
         message: userPostsMessage
     } = useSelector((state) => state.posts);
 
-    // ⭐ ОСТАВЛЕН: Обработчик перехода в чат
+    // Обработчик перехода в чат
     const handleGoToChat = useCallback(() => {
-        // if (id) {
-        //     // 1. Диспетчим Thunk. Promise (then) гарантирует, что навигация 
-        //     //    начнется только после завершения запроса к серверу.
-        //     dispatch(activateChat(id)).then(() => {
+        if (id) {
+            // Вызываем КОРРЕКТНО импортированное Thunk-действие
+            dispatch(activateChatConnection(id)).then(() => { 
                 
-        //         // 2. Дополнительно диспетчим обычный редьюсер для Redux-состояния
-        //         //    (это очень важно для внутренней логики фронтенда)
-        //         dispatch(setActiveChat(id)); // <-- ВАЖНО: Используйте ваш редьюсер setActiveChat
+                // 2. Дополнительно диспетчим обычный редьюсер для Redux-состояния
+                dispatch(setActiveChat(id)); 
 
-        //         // 3. Навигируем
-        //         navigate(`/chat/${id}`);
-        //     });
-        // }
+                // 3. Навигируем
+                navigate(`/chat/${id}`);
+            }).catch(error => {
+                // Важно обрабатывать ошибку Thunk-а
+                console.error("Ошибка активации чата:", error);
+                // Если Thunk падает, навигация не произойдет, это правильно.
+                // Можно добавить toast: toast.error('Не удалось начать чат.');
+            });
+        } else {
+            // Добавьте обработку случая, когда ID не найден (хотя params.id должен быть)
+            dispatch(toastError('Невозможно перейти в чат: ID пользователя не найден.')); 
+        }
     }, [id, navigate, dispatch]);
     
     // ⭐ ОСТАВЛЕН: handleSaveProfile (для био)
     const handleSaveProfile = useCallback(async () => {
         if (!editedBio.trim()) {
-            toast.error('Пожалуйста, введите текст био.'); 
+            dispatch(toastError('Пожалуйста, введите текст био.')); 
             return;
         }
 
@@ -77,7 +82,7 @@ function ProfilePage() {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                toast.error('Вы не авторизованы для сохранения профиля.'); 
+                dispatch(toastError('Вы не авторизованы для сохранения профиля.')); 
                 return;
             }
 
@@ -91,11 +96,11 @@ function ProfilePage() {
             const response = await axios.put(`${API_BASE_URL}/users/profile`, { bio: editedBio }, config);
             
             dispatch(setUserProfile(response.data.user)); 
-            toast.success('Профиль успешно обновлен!'); 
+            dispatch(toastSuccess('Профиль успешно обновлен!')); 
         } catch (error) {
             console.error('Ошибка при сохранении профиля:', error);
             const errorMessage = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
-            toast.error(`Ошибка при сохранении профиля: ${errorMessage}`); 
+            dispatch(toastError(`Ошибка при сохранении профиля: ${errorMessage}`)); 
         } finally {
             setIsSavingProfile(false); 
         }

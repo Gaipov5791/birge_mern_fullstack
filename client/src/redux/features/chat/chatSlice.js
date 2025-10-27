@@ -7,7 +7,7 @@ import {
     deleteMessageForEveryone, 
     deleteAllMessagesForEveryone,
     fetchUnreadConversationsSummary,
-    activateChat
+    activateChatConnection
 } from './chatThunks'; // Убедитесь, что путь к chatThunks верный
 
 
@@ -246,15 +246,15 @@ const chatSlice = createSlice({
                 state.error = action.payload;
             })
             // ⭐ НОВЫЕ ОБРАБОТЧИКИ ДЛЯ activateChat    
-            .addCase(activateChat.pending, (state) => {
+            .addCase(activateChatConnection.pending, (state) => {
                 
             })
-            .addCase(activateChat.fulfilled, (state, action) => {
+            .addCase(activateChatConnection.fulfilled, (state, action) => {
                 const receiverId = action.payload.receiverId;
                 state.activeChatWith = receiverId;
                 console.log(`[Redux] Активация чата успешна: ${receiverId}`);
             })
-            .addCase(activateChat.rejected, (state, action) => {
+            .addCase(activateChatConnection.rejected, (state, action) => {
                 console.error('Ошибка активации чата:', action.payload);
             });
     },
