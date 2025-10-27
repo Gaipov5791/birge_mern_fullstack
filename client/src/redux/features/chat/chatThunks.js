@@ -199,8 +199,8 @@ export const fetchUnreadConversationsSummary = createAsyncThunk(
 ); 
 
 // Асинхронный thunk для активации чата
-export const activateChatConnection = createAsyncThunk(
-    'chat/activateChatConnection',
+export const activateChat = (
+    'chat/activateChat',
     async (receiverId, thunkAPI) => {
         try {
             
@@ -210,7 +210,7 @@ export const activateChatConnection = createAsyncThunk(
                 return thunkAPI.rejectWithValue('Нет токена авторизации');
             }
 
-            const data = await chatService.activateChatСonnection(receiverId, token);
+            const data = await chatService.activateChat(receiverId, token);
             return data;
         } catch (error) {
             const message = error.response?.data?.message || error.message || error.toString();
