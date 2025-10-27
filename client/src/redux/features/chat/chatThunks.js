@@ -199,7 +199,7 @@ export const fetchUnreadConversationsSummary = createAsyncThunk(
 ); 
 
 // Асинхронный thunk для активации чата
-export const activateChat = (
+export const activateChatConnection = (
     'chat/activateChat',
     async (receiverId, thunkAPI) => {
         try {
