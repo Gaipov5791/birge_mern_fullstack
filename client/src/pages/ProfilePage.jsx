@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { toast } from 'react-toastify'; 
-import { FaSpinner } from 'react-icons/fa';
+import { useSelector, useDispatch } from 'react-redux'; 
 import { BsChatDots } from 'react-icons/bs';
 import { 
     reset as resetAuthSlice,
     setUserProfile,
 } from '../redux/features/auth/authSlice';
+import { clearNotificationForSender } from '../redux/features/chat/chatSlice';
 import axios from 'axios';
 
 import { getUserPosts } from '../redux/features/posts/postThunks';
+import { markMessagesAsRead } from '../redux/features/chat/chatThunks';
 
 // Обновленный импорт: ProfileActions вместо ProfileHeader
 import ProfileActions from '../components/profile/ProfileActions'; // ⭐ НОВЫЙ ИМПОРТ
@@ -50,12 +50,14 @@ function ProfilePage() {
 
     // ⭐ ОСТАВЛЕН: Обработчик перехода в чат
     const handleGoToChat = useCallback(() => {
-        if (id) {
-            navigate(`/chat/${id}`);
-        } else {
-            toast.error('Невозможно перейти в чат: ID пользователя не найден.');
-        }
-    }, [id, navigate]);
+        if (id) {
+            dispatch(markMessagesAsRead(id));
+            dispatch(clearNotificationForSender(id));
+            navigate(`/chat/${id}`);
+        } else {
+            dispatch(toastError('Невозможно перейти в чат: отсутствует ID пользователя.'));
+        }
+        }, [dispatch, navigate, id]);
     
     // ⭐ ОСТАВЛЕН: handleSaveProfile (для био)
     const handleSaveProfile = useCallback(async () => {
