@@ -210,7 +210,7 @@ export const activateChatConnection = createAsyncThunk(
                 return thunkAPI.rejectWithValue('Нет токена авторизации');
             }
 
-            const data = await chatService.activateChat(receiverId, token);
+            const data = await chatService.activateChatСonnection(receiverId, token);
             return data;
         } catch (error) {
             const message = error.response?.data?.message || error.message || error.toString();
