@@ -10,7 +10,7 @@ import { clearNotificationForSender, setActiveChat } from '../redux/features/cha
 import axios from 'axios';
 
 import { getUserPosts } from '../redux/features/posts/postThunks';
-import { markMessagesAsRead, activateChat } from '../redux/features/chat/chatThunks';
+import { markMessagesAsRead, activateChatConnection } from '../redux/features/chat/chatThunks';
 
 // Обновленный импорт: ProfileActions вместо ProfileHeader
 import ProfileActions from '../components/profile/ProfileActions'; // ⭐ НОВЫЙ ИМПОРТ
@@ -51,9 +51,9 @@ function ProfilePage() {
     // Обработчик перехода в чат
     const handleGoToChat = useCallback(() => {
         if (id) {
-            console.log(activateChat);
+            console.log(activateChatConnection);
             // Вызываем КОРРЕКТНО импортированное Thunk-действие
-            dispatch(activateChat(id)).then(() => { 
+            dispatch(activateChatConnection(id)).then(() => { 
                 
                 // 2. Дополнительно диспетчим обычный редьюсер для Redux-состояния
                 dispatch(setActiveChat(id)); 
