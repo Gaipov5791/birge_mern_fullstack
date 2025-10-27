@@ -199,22 +199,19 @@ export const fetchUnreadConversationsSummary = createAsyncThunk(
 ); 
 
 // Асинхронный thunk для активации чата
-export const activateChatConnection = (
-    'chat/activateChat',
-    async (receiverId, thunkAPI) => {
-        try {
-            
-            const token = thunkAPI.getState().auth.token;
-
-            if (!token) {
-                return thunkAPI.rejectWithValue('Нет токена авторизации');
-            }
-
-            const data = await chatService.activateChat(receiverId, token);
-            return data;
-        } catch (error) {
-            const message = error.response?.data?.message || error.message || error.toString();
-            return thunkAPI.rejectWithValue(message);
-        }
-    }
+export const activateChatConnection = createAsyncThunk(
+    'chat/activateChatConnection',
+    async (receiverId, thunkAPI) => {
+        try {
+            const token = thunkAPI.getState().auth.token;
+            if (!token) {
+                return thunkAPI.rejectWithValue('Нет токена авторизации');
+            }
+            await chatService.activateChatConnection(receiverId, token);
+            return { receiverId };
+        } catch (error) {
+            const message = error.response?.data?.message || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
 );

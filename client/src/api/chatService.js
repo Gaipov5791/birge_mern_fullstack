@@ -103,7 +103,7 @@ const fetchUnreadConversationsSummary = async (token) => {
 
 
 // Активация чата (для гарантии коммуникации с сервером)
-const activateChat = async (receiverId, token) => {
+const activateChatConnection = async (receiverId, token) => {
     const config = {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -124,7 +124,7 @@ const chatService = {
     deleteMessageForEveryone,
     deleteAllMessagesForEveryone,
     fetchUnreadConversationsSummary,
-    activateChat,
+    activateChatConnection,
 };
 
 export default chatService;
