@@ -50,21 +50,21 @@ function ProfilePage() {
     } = useSelector((state) => state.posts);
 
     // ⭐ ОСТАВЛЕН: Обработчик перехода в чат
-//     const handleGoToChat = useCallback(() => {
-//         if (id) {
-//             // 1. Диспетчим Thunk. Promise (then) гарантирует, что навигация 
-//             //    начнется только после завершения запроса к серверу.
-//             dispatch(activateChat(id)).then(() => {
+    const handleGoToChat = useCallback(() => {
+        // if (id) {
+        //     // 1. Диспетчим Thunk. Promise (then) гарантирует, что навигация 
+        //     //    начнется только после завершения запроса к серверу.
+        //     dispatch(activateChat(id)).then(() => {
                 
-//                 // 2. Дополнительно диспетчим обычный редьюсер для Redux-состояния
-//                 //    (это очень важно для внутренней логики фронтенда)
-//                 dispatch(setActiveChat(id)); // <-- ВАЖНО: Используйте ваш редьюсер setActiveChat
+        //         // 2. Дополнительно диспетчим обычный редьюсер для Redux-состояния
+        //         //    (это очень важно для внутренней логики фронтенда)
+        //         dispatch(setActiveChat(id)); // <-- ВАЖНО: Используйте ваш редьюсер setActiveChat
 
-//                 // 3. Навигируем
-//                 navigate(`/chat/${id}`);
-//             });
-//         }
-//     }, [id, navigate, dispatch]);
+        //         // 3. Навигируем
+        //         navigate(`/chat/${id}`);
+        //     });
+        // }
+    }, [id, navigate, dispatch]);
     
     // ⭐ ОСТАВЛЕН: handleSaveProfile (для био)
     const handleSaveProfile = useCallback(async () => {
