@@ -51,7 +51,6 @@ function ProfilePage() {
     // Обработчик перехода в чат
     const handleGoToChat = useCallback(() => {
         if (id) {
-            console.log(activateChatConnection);
             // Вызываем КОРРЕКТНО импортированное Thunk-действие
             dispatch(activateChatConnection(id)).then(() => { 
                 
