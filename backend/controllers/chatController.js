@@ -150,33 +150,36 @@ export const markMessageAsRead = async (req, res) => {
     }
 
     try {
-        let conversationId = null;
-
         let conversation = await Conversation.findOne({
             participants: { $all: [currentUserId, senderId] },
         });
 
-        // ШАГ 1: Обновляем счетчик непрочитанных (ТОЛЬКО если Conversation существует)
-        if (conversation) {
-            const readerUnreadEntry = conversation.unreadCounts.find(entry =>
-                entry.user.equals(currentUserId)
-            );
-
-            if (readerUnreadEntry && readerUnreadEntry.count > 0) {
-                readerUnreadEntry.count = 0;
-                await conversation.save();
-                console.log(`Unread count reset for user ${currentUserId}.`);
-                // ⭐ ТЕПЕРЬ НЕ ОТПРАВЛЯЕМ unreadCountReset ОТДЕЛЬНО
-            } else if (!readerUnreadEntry) {
-                 // Если диалог есть, но записи нет (редкий случай)
-                conversation.unreadCounts.push({ user: currentUserId, count: 0 });
-                await conversation.save();
-            }
+        // Если диалога нет, мы не можем пометить ничего как прочитанное
+        if (!conversation) {
+            console.log(`Conversation not found between ${currentUserId} and ${senderId}. Skipping mark as read.`);
+            return res.status(200).json({ 
+                message: 'Сообщения не помечены: Диалог не найден.',
+                modifiedCount: 0 
+            });
         }
         
-        conversationId = conversation._id;
+        const conversationId = conversation._id; // ✅ Теперь это безопасно
 
+        // ШАГ 1: Обновляем счетчик непрочитанных
+        const readerUnreadEntry = conversation.unreadCounts.find(entry =>
+            entry.user.equals(currentUserId)
+        );
 
+        if (readerUnreadEntry && readerUnreadEntry.count > 0) {
+            readerUnreadEntry.count = 0;
+            await conversation.save();
+            console.log(`Unread count reset for user ${currentUserId}.`);
+        } else if (!readerUnreadEntry) {
+            // Если диалог есть, но записи нет
+            conversation.unreadCounts.push({ user: currentUserId, count: 0 });
+            await conversation.save();
+        }
+        
         // ⭐ ШАГ 2: Обновляем поле 'readBy' для сообщений
         const result = await Chat.updateMany(
             {
@@ -189,23 +192,20 @@ export const markMessageAsRead = async (req, res) => {
         
         console.log(`Updated ${result.modifiedCount} messages as read for user ${currentUserId} from ${senderId}.`);
 
-        // ⭐ ШАГ 3: Оповещаем отправителя через Socket.IO (ВСЕГДА, ЕСЛИ ЕСТЬ ЧИТАТЕЛЬ)
-        // Теперь мы отправляем событие, если кто-то прочитал сообщения,
-        // независимо от того, были ли *новые* сообщения фактически обновлены в readBy.
-        // Это важно, так как unreadCounts мог быть сброшен.
+        // ⭐ ШАГ 3: Оповещаем отправителя через Socket.IO
         const senderSocketId = userSocketMap[senderId.toString()]; // senderId - это Пользователь А
         if (senderSocketId) {
             io.to(senderSocketId).emit('messagesRead', {
-                readerId: currentUserId.toString(), // Пользователь Б
-                senderId: senderId.toString(),       // Пользователь А
+                readerId: currentUserId.toString(), 
+                senderId: senderId.toString(), 
                 conversationId: conversationId.toString()
             });
-            console.log(`Event 'messagesRead' ALWAYS EMITTED to ${senderId}.`); // ⭐ Теперь этот лог должен быть
+            console.log(`Event 'messagesRead' EMITTED to ${senderId}.`);
         } else {
             console.log(`Sender ${senderId} is OFFLINE or has no active socket for messagesRead.`);
         }
         
-        // ⭐ ШАГ 4: Дополнительно (как было)
+        // ШАГ 4: Дополнительно
         res.status(200).json({ 
             message: 'Сообщения успешно помечены как прочитанные.', 
             modifiedCount: result.modifiedCount,
