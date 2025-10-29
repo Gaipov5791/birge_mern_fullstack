@@ -130,13 +130,13 @@ const chatSlice = createSlice({
                 notif => notif.senderId === newNotification.senderId
             );
             
-            // ⭐ ГЛАВНОЕ ИСПРАВЛЕНИЕ: Удаление при нулевом счетчике
+            // ⭐ КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Удаление при нулевом счетчике
             if (newNotification.unreadCount === 0) {
                 if (existingIndex !== -1) {
                     // Если счетчик 0 и уведомление существует, удаляем его
                     state.unreadNotificationsSummary.splice(existingIndex, 1);
                 }
-                return; // Завершаем
+                return; // Завершаем обработку
             }
 
             // Логика обновления/добавления (только если unreadCount > 0)
@@ -145,7 +145,7 @@ const chatSlice = createSlice({
             } else {
                 state.unreadNotificationsSummary.push(newNotification);
             }
-            // Сортируем по lastMessageAt, чтобы самые свежие были сверху
+            // Сортируем...
             state.unreadNotificationsSummary.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
         },
         // ⭐ clearNotificationForSender вызывается, когда *текущий пользователь* читает
