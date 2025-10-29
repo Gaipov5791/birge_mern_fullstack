@@ -16,10 +16,9 @@ export const getUnreadConversationsSummary = async (req, res) => {
         // Найти все Conversation, где currentUserId является участником
         // и у него есть непрочитанные сообщения
         const conversations = await Conversation.find({
-            participants: currentUserId,
-            'unreadCounts.user': currentUserId, // Убедиться, что запись для текущего пользователя существует
-            'unreadCounts.count': { $gt: 0 } // И количество непрочитанных > 0
-        })
+            participants: currentUserId,
+            'unreadCounts.user': currentUserId, // Убедиться, что запись для текущего пользователя существует
+        })
         .populate({
             path: 'participants',
             select: 'username profilePicture', // Извлекаем только нужные поля пользователя
@@ -29,7 +28,7 @@ export const getUnreadConversationsSummary = async (req, res) => {
 
         const summary = conversations.map(conv => {
             // Найдем другого участника (отправителя)
-            const otherParticipant = conv.participants.find(p => !p._id.equals(currentUserId));
+            const otherParticipant = conv.participants[0];
             
             // Найдем счетчик непрочитанных для текущего пользователя в этой беседе
             const unreadEntry = conv.unreadCounts.find(uc => uc.user.equals(currentUserId));
