@@ -125,21 +125,29 @@ const chatSlice = createSlice({
         // Теперь action.payload будет содержать полную информацию:
         // { senderId, senderUsername, senderProfilePicture, unreadCount, lastMessageAt }
         addOrUpdateNotification: (state, action) => {
-            const newNotification = action.payload;
-            const existingIndex = state.unreadNotificationsSummary.findIndex(
-                notif => notif.senderId === newNotification.senderId
-            );
+            const newNotification = action.payload;
+            const existingIndex = state.unreadNotificationsSummary.findIndex(
+                notif => notif.senderId === newNotification.senderId
+            );
+            
+            // ⭐ ГЛАВНОЕ ИСПРАВЛЕНИЕ: Удаление при нулевом счетчике
+            if (newNotification.unreadCount === 0) {
+                if (existingIndex !== -1) {
+                    // Если счетчик 0 и уведомление существует, удаляем его
+                    state.unreadNotificationsSummary.splice(existingIndex, 1);
+                }
+                return; // Завершаем
+            }
 
-            if (existingIndex !== -1) {
-                // Если уведомление от этого отправителя уже есть, обновляем его
-                state.unreadNotificationsSummary[existingIndex] = newNotification;
-            } else {
-                // Иначе добавляем новое
-                state.unreadNotificationsSummary.push(newNotification);
-            }
-            // Сортируем по lastMessageAt, чтобы самые свежие были сверху
-            state.unreadNotificationsSummary.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
-        },
+            // Логика обновления/добавления (только если unreadCount > 0)
+            if (existingIndex !== -1) {
+                state.unreadNotificationsSummary[existingIndex] = newNotification;
+            } else {
+                state.unreadNotificationsSummary.push(newNotification);
+            }
+            // Сортируем по lastMessageAt, чтобы самые свежие были сверху
+            state.unreadNotificationsSummary.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
+        },
         // ⭐ clearNotificationForSender вызывается, когда *текущий пользователь* читает
         // входящие сообщения от *другого пользователя*. Это должно быть вызвано 
         // из NotificationCenter или ChatPage, когда пользователь открывает чат.
