@@ -65,15 +65,32 @@ export const sendMessage = async (req, res) => {
 
         await conversation.save();
 
-        // 4. ЗАГРУЖАЕМ (POPULATE) СВЯЗАННЫЕ ДАННЫЕ ДЛЯ СООБЩЕНИЯ
-        const populatedMessage = await savedMessage.populate([
-            { path: 'sender', select: 'username profilePicture' },
-            { path: 'receiver', select: 'username profilePicture' }
-        ]);
+        // 4. ЗАГРУЖАЕМ (POPULATE) СВЯЗАННЫЕ ДАННЫЕ ДЛЯ СООБЩЕНИЯ
+        const populatedMessageDoc = await savedMessage.populate([
+            { path: 'sender', select: 'username profilePicture' },
+            { path: 'receiver', select: 'username profilePicture' }
+        ]);
 
-        // 5. ОТПРАВЛЯЕМ СОКЕТ-СОБЫТИЯ (используем req.io)
-        const senderSocketId = req.userSocketMap[senderId.toString()];
-        const receiverSocketId = req.userSocketMap[receiverId.toString()];
+        // ⭐ КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: Нормализуем данные перед отправкой
+        const populatedMessage = populatedMessageDoc.toObject(); // Преобразуем Mongoose Document в JS-объект
+
+        // Гарантируем, что все ID в readBy являются строками
+        if (populatedMessage.readBy && Array.isArray(populatedMessage.readBy)) {
+            populatedMessage.readBy = populatedMessage.readBy.map(id => id.toString());
+        }
+        
+        // Гарантируем, что sender и receiver, если они были заполнены, 
+        // не являются полными объектами, но их _id также доступны как строка (хотя populate должен это делать)
+        if (populatedMessage.sender) {
+            populatedMessage.sender._id = populatedMessage.sender._id.toString();
+        }
+        if (populatedMessage.receiver) {
+            populatedMessage.receiver._id = populatedMessage.receiver._id.toString();
+        }
+
+        // 5. ОТПРАВЛЯЕМ СОКЕТ-СОБЫТИЯ (используем req.io)
+        const senderSocketId = req.userSocketMap[senderId.toString()];
+        const receiverSocketId = req.userSocketMap[receiverId.toString()];
 
         // Отправляем сообщение обратно отправителю и получателю
         if (senderSocketId) {
@@ -111,30 +128,57 @@ export const sendMessage = async (req, res) => {
     }
 };
 
-// @desc    Получить историю сообщений между двумя пользователями
-// @route   GET /api/chat/:receiverId
-// @access  Private
+// @desc    Получить историю сообщений между двумя пользователями
+// @route   GET /api/chat/:receiverId
+// @access  Private
 export const getChatHistory = async (req, res) => {
-    const { receiverId } = req.params;
-    const currentUserId = req.user._id;
-    if (!mongoose.Types.ObjectId.isValid(receiverId)) {
-        return res.status(400).json({ message: 'Некорректный ID получателя.' });
-    }
-    try {
-        const chatHistory = await Chat.find({
-            $or: [
-                { sender: currentUserId, receiver: receiverId },
-                { sender: receiverId, receiver: currentUserId }
-            ],
-        })
-        .sort({ createdAt: 1 }) // Сортируем по времени создания по возрастанию
-        .populate('sender', 'username avatar') // Заполняем данные об отправителе
-        .populate('receiver', 'username avatar'); // Заполняем данные о получателе
-        
-        res.status(200).json(chatHistory, { message: 'История сообщений успешно получена.' });
-    } catch (error) {
-        res.status(500).json({ message: 'Ошибка при получении истории сообщений.', error: error.message });
-    }
+    const { receiverId } = req.params;
+    const currentUserId = req.user._id;
+    if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+        return res.status(400).json({ message: 'Некорректный ID получателя.' });
+    }
+    try {
+        const rawChatHistory = await Chat.find({ // Имя переменной изменено для ясности
+            $or: [
+                { sender: currentUserId, receiver: receiverId },
+                { sender: receiverId, receiver: currentUserId }
+            ],
+        })
+        .sort({ createdAt: 1 })
+        .populate('sender', 'username avatar') 
+        .populate('receiver', 'username avatar')
+        // ⭐ КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: Используем .lean() для получения чистых JS-объектов
+        .lean(); 
+        
+        // ⭐ НОРМАЛИЗАЦИЯ: Преобразуем все ID в строковый формат
+        const chatHistory = rawChatHistory.map(message => {
+            // Преобразуем _id сообщения, conversation, sender._id, receiver._id
+            message._id = message._id.toString();
+            message.conversation = message.conversation.toString();
+
+            // Гарантируем, что readBy является массивом строк ID
+            if (Array.isArray(message.readBy)) {
+                message.readBy = message.readBy.map(id => id.toString());
+            }
+
+            // Убедимся, что заполненные поля также имеют строковые ID
+            if (message.sender && message.sender._id) {
+                message.sender._id = message.sender._id.toString();
+            }
+            if (message.receiver && message.receiver._id) {
+                message.receiver._id = message.receiver._id.toString();
+            }
+
+            return message;
+        });
+
+        // Отправляем чистый массив
+        res.status(200).json(chatHistory); 
+        // Убрали лишний второй аргумент, так как .json() принимает только один аргумент (тело ответа)
+    } catch (error) {
+        console.error('Ошибка при получении истории сообщений:', error.message, error.stack);
+        res.status(500).json({ message: 'Ошибка при получении истории сообщений.', error: error.message });
+    }
 };
 
 // @desc    Пометить сообщения как прочитанные

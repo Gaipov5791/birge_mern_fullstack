@@ -45,38 +45,47 @@ const chatSlice = createSlice({
         // ⭐ ОБНОВЛЕННЫЙ РЕДЮСЕР для обновления статуса прочитанных сообщений (галочек)
         // Этот редюсер вызывается, когда *другой пользователь* (readerId) прочитал *наши* сообщения.
         updateMessagesReadStatus: (state, action) => {
-            const { readerId, senderId, conversationId } = action.payload; // Payload: { readerId: ID_Б, senderId: ID_А, conversationId: ID_диалога }
-            console.log('Редюсер updateMessagesReadStatus вызван. Payload:', action.payload);
+            const { readerId, senderId, conversationId } = action.payload; // readerId - это Пользователь Б (читатель)
+            const readerIdStr = readerId.toString(); // ✅ Преобразуем ID читателя в строку
+            const senderIdStr = senderId.toString(); // ✅ Преобразуем ID отправителя в строку
+            
+            console.log('Редюсер updateMessagesReadStatus вызван. Payload:', action.payload);
 
-            let messagesUpdatedCount = 0;
-            state.messages.filter(msg => msg != null).forEach(message => {
-                if (!message._id) {
+            let messagesUpdatedCount = 0;
+            state.messages.filter(msg => msg != null).forEach(message => {
+                if (!message._id) {
                     console.warn('Пропущено сообщение без _id в Redux:', message);
-                    return; // Пропускаем элемент
+                    return;
                 }
-                const messageSenderId = message.sender && typeof message.sender === 'object' ? message.sender._id : message.sender;
-                const messageReceiverId = message.receiver && typeof message.receiver === 'object' ? message.receiver._id : message.receiver;
+                // Получаем ID отправителя и получателя сообщения в виде строки
+                const messageSenderId = (message.sender && typeof message.sender === 'object' ? message.sender._id : message.sender)?.toString();
+                const messageReceiverId = (message.receiver && typeof message.receiver === 'object' ? message.receiver._id : message.receiver)?.toString();
 
-                console.log(`Проверка сообщения ${message._id}:`);
-                console.log(`  messageSenderId: ${messageSenderId} === payload.senderId: ${senderId} -> ${messageSenderId === senderId}`);
-                console.log(`  messageReceiverId: ${messageReceiverId} === payload.readerId: ${readerId} -> ${messageReceiverId === readerId}`);
-                console.log(`  message.readBy (до проверки):`, message.readBy); // ⭐ ЭТОТ ЛОГ КРИТИЧЕН
-                console.log(`  !message.readBy.includes(readerId): ${!message.readBy.includes(readerId)}`);
-                // ⭐ ИЗМЕНЕНО: используем .toString() для сравнения, если message.conversation - ObjectId
-                console.log(`  message.conversation: ${message.conversation} === payload.conversationId: ${conversationId} -> ${message.conversation && message.conversation.toString() === conversationId}`);
+                // ✅ ИСПРАВЛЕНИЕ: Используем более надежную проверку на включение ID,
+                // учитывая, что массив мог быть испорчен объектами:
+                const isAlreadyRead = message.readBy.some(id => (id && id.toString() === readerIdStr));
+
+                console.log(`Проверка сообщения ${message._id}:`);
+                console.log(`  messageSenderId: ${messageSenderId} === payload.senderId: ${senderIdStr} -> ${messageSenderId === senderIdStr}`);
+                console.log(`  messageReceiverId: ${messageReceiverId} === payload.readerId: ${readerIdStr} -> ${messageReceiverId === readerIdStr}`);
+                console.log(`  message.readBy (до проверки):`, message.readBy);
+                console.log(`  !isAlreadyRead: ${!isAlreadyRead}`);
+                console.log(`  message.conversation: ${message.conversation} === payload.conversationId: ${conversationId} -> ${message.conversation && message.conversation.toString() === conversationId}`);
 
 
-                if (messageSenderId === senderId &&
-                    messageReceiverId === readerId &&
-                    message.conversation && message.conversation.toString() === conversationId && // ⭐ И здесь используем .toString()
-                    !message.readBy.includes(readerId)) {
-                    message.readBy.push(readerId);
-                    messagesUpdatedCount++;
-                    console.log(`Сообщение ${message._id} успешно обновлено. readBy теперь:`, message.readBy);
-                }
-            });
-            console.log(`Всего сообщений обновлено в Redux: ${messagesUpdatedCount}`);
-        },
+                if (messageSenderId === senderIdStr &&
+                    messageReceiverId === readerIdStr &&
+                    message.conversation && message.conversation.toString() === conversationId &&
+                    !isAlreadyRead) { // ✅ Используем новую, более надежную проверку
+                    
+                    // ✅ ДОБАВЛЯЕМ ТОЛЬКО СТРОКУ ID!
+                    message.readBy.push(readerIdStr);
+                    messagesUpdatedCount++;
+                    console.log(`Сообщение ${message._id} успешно обновлено. readBy теперь:`, message.readBy);
+                }
+            });
+            console.log(`Всего сообщений обновлено в Redux: ${messagesUpdatedCount}`);
+        },
         updateMessagesDeliveredStatus: (state, action) => {
             const { senderId } = action.payload;
             state.messages.filter(msg => msg != null).forEach(message => {
@@ -187,20 +196,24 @@ const chatSlice = createSlice({
                 state.error = null;
             })
             .addCase(markMessagesAsRead.fulfilled, (state, action) => {
-                const { readerId } = action.payload;
-                // ⭐ ОБНОВИТЬ: Промаркировать все входящие сообщения как прочитанные
-                state.messages.forEach(message => {
-                    const messageReceiverId = message.receiver && typeof message.receiver === 'object' ? message.receiver._id : message.receiver;
-                    
-                    // Если сообщение адресовано нам (мы — читатель) и еще не прочитано нами
-                    if (messageReceiverId === readerId && !message.readBy.includes(readerId)) {
-                        message.readBy.push(readerId);
-                        // Дополнительно можно обновить delivered, если это необходимо
-                        if (!message.delivered) {
-                            message.delivered = true;
-                        }
-                    }
-                });
+                const readerIdStr = action.payload.readerId.toString(); // ✅ Преобразование в строку
+                
+                state.messages.forEach(message => {
+                    // ✅ Получаем ID получателя в виде строки
+                    const messageReceiverId = (message.receiver && typeof message.receiver === 'object' ? message.receiver._id : message.receiver)?.toString();
+                    
+                    // ✅ Надежная проверка на прочтение
+                    const isAlreadyRead = message.readBy.some(id => (id && id.toString() === readerIdStr));
+
+                    // Если сообщение адресовано нам (мы — читатель) и еще не прочитано нами
+                    if (messageReceiverId === readerIdStr && !isAlreadyRead) {
+                        message.readBy.push(readerIdStr); // ✅ Добавляем только строку
+                        
+                        if (!message.delivered) {
+                            message.delivered = true;
+                        }
+                    }
+                });
             })
             .addCase(markMessagesAsRead.rejected, (state, action) => {
                 state.isError = true;
