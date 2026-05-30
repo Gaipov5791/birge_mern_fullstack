@@ -21,13 +21,14 @@ const createPost = async (postData) => {
     return response.data;
 };
 
-// Получить все посты
-const getPosts = async () => {
+// Получить посты (с опциональной пагинацией по cursor)
+const getPosts = async (cursor = null) => {
     const token = getToken();
     const config = {
         headers: {
             Authorization: `Bearer ${token}`,
         },
+        params: cursor ? { cursor } : {},
     };
     const response = await axios.get(API_URL, config);
     return response.data;

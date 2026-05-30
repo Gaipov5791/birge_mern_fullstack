@@ -21,7 +21,9 @@ const initialState = {
     isLiking: false,
     isHashtagLoading: false,
     hashtagErrorMessage: "",
-    postsLoaded: false, 
+    postsLoaded: false,
+    nextCursor: null,
+    isLoadingMore: false,
     // ⭐ Поля для модальных окон
     isPostOperationLoading: false,
     postIdToEdit: null,
@@ -39,6 +41,7 @@ const postSlice = createSlice({
         reset: (state) => {
             state.isPosting = false;
             state.isLoading = false;
+            state.isLoadingMore = false;
             state.isLiking = false;
             state.isPostOperationLoading = false;
             state.postIdToEdit = null;
@@ -46,6 +49,9 @@ const postSlice = createSlice({
             state.isError = false;
             state.isSuccess = false;
             state.message = "";
+            state.postsLoaded = false;
+            state.nextCursor = null;
+            state.timelinePosts = [];
         },
         updateSinglePostInState: (state, action) => {
             const updatedPost = action.payload;
@@ -132,23 +138,45 @@ const postSlice = createSlice({
                 state.message = action.payload;
                 state.isSuccess = false;
             })
-            // GET ALL POSTS
-            .addCase(getPosts.pending, (state) => {
-                state.isLoading = true;
+            // GET ALL POSTS (cursor pagination)
+            .addCase(getPosts.pending, (state, action) => {
+                const isLoadMore = Boolean(action.meta.arg?.cursor);
+                if (isLoadMore) {
+                    state.isLoadingMore = true;
+                } else {
+                    state.isLoading = true;
+                }
                 state.isError = false;
                 state.message = "";
             })
             .addCase(getPosts.fulfilled, (state, action) => {
-                state.isLoading = false;
+                const isLoadMore = Boolean(action.meta.arg?.cursor);
+                const { posts, nextCursor } = action.payload;
+
+                if (isLoadMore) {
+                    const existingIds = new Set(state.timelinePosts.map((p) => String(p._id)));
+                    const newPosts = posts.filter((p) => !existingIds.has(String(p._id)));
+                    state.timelinePosts.push(...newPosts);
+                    state.isLoadingMore = false;
+                } else {
+                    state.timelinePosts = posts;
+                    state.postsLoaded = true;
+                    state.isLoading = false;
+                }
+
                 state.isSuccess = true;
-                state.postsLoaded = true;
-                state.timelinePosts = action.payload;
+                state.nextCursor = nextCursor;
             })
             .addCase(getPosts.rejected, (state, action) => {
-                state.isLoading = false;
+                const isLoadMore = Boolean(action.meta.arg?.cursor);
+                if (isLoadMore) {
+                    state.isLoadingMore = false;
+                } else {
+                    state.isLoading = false;
+                    state.timelinePosts = [];
+                }
                 state.isError = true;
                 state.message = action.payload;
-                state.timelinePosts = [];
             })
             // GET USER POSTS
             .addCase(getUserPosts.pending, (state) => {

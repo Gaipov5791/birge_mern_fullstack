@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import PostItem from '../PostItem'; 
-import ConfirmationModal from '../chat/ConfirmationModal'; // Предполагаемый путь
+import ConfirmationModal from '../common/ConfirmationModal';
 import PostEditModal from '../common/PostEditModal'; // Предполагаемый путь
 import LoadingModal from '../common/LoadingModal';
 import { deletePost, updatePost } from '../../redux/features/posts/postThunks'; // Thunks для постов

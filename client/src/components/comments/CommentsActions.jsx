@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteComment, updateComment } from '../../redux/features/comments/commentThunks';
 import CommentItem from '../CommentItem';
-import ConfirmationModal from '../chat/ConfirmationModal';
+import ConfirmationModal from '../common/ConfirmationModal';
 import CommentEditModal from '../common/CommentEditModal';
 import LoadingModal from '../common/LoadingModal';
 import { toastSuccess, toastError } from '../../redux/features/notifications/notificationSlice';

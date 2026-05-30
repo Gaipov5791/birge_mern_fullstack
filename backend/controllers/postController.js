@@ -1,27 +1,33 @@
 import Post from "../models/Post.js";
 import User from "../models/User.js";
-import cloudinary from "../config/cloudinaryConfig.js";
+import cloudinary, { IMAGE_UPLOAD_TRANSFORMATION } from "../config/cloudinaryConfig.js";
 
-// 💡 НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В CLOUDINARY
+const PAGE_SIZE = 20;
+
 const uploadToCloudinary = (file) => {
     return new Promise((resolve, reject) => {
         const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
 
+        const uploadOptions = {
+            folder: "birge_posts",
+            resource_type: resourceType,
+        };
+
+        if (resourceType === 'image') {
+            uploadOptions.transformation = IMAGE_UPLOAD_TRANSFORMATION;
+        }
+
         const uploadStream = cloudinary.uploader.upload_stream(
-            { 
-                folder: "birge_posts", 
-                resource_type: resourceType,
-            },
+            uploadOptions,
             (error, result) => {
                 if (error) {
-                    console.error("Cloudinary Error:", error); // ⭐ ЛОГ ОШИБКИ CLOUDINARY
-                    return reject(error); // Обязательно отклоняем промис при ошибке
+                    console.error("Cloudinary Error:", error);
+                    return reject(error);
                 }
-                // ⭐ ЛОГ УСПЕШНОГО URL
-                console.log(`Cloudinary Success: ${result.secure_url}`); 
+                console.log(`Cloudinary Success: ${result.secure_url}`);
                 resolve(result);
             }
-        ).end(file.buffer); 
+        ).end(file.buffer);
     });
 };
 
@@ -126,21 +132,39 @@ export const createPost = async (req, res) => {
     }
 };
 
-// @desc    Получить все посты
-// @route   GET /api/posts
-// @access  Публичный
+// @desc    Получить посты с cursor-based пагинацией
+// @route   GET /api/posts?cursor=<ISO-date>
+// @access  Приватный
 export const getPosts = async (req, res) => {
     try {
-        const posts = await Post.find({})
-            .populate({
-                path: 'author', // Поле в модели Post, которое ссылается на User
-                select: 'username profilePicture followers following', // Какие поля User нужно популировать
-            })
-            .sort({ createdAt: -1 });
+        const { cursor } = req.query;
+        const query = {};
+
+        if (cursor) {
+            const cursorDate = new Date(cursor);
+            if (Number.isNaN(cursorDate.getTime())) {
+                return res.status(400).json({ message: 'Неверный формат cursor' });
+            }
+            query.createdAt = { $lt: cursorDate };
+        }
+
+        const results = await Post.find(query)
+            .sort({ createdAt: -1 })
+            .limit(PAGE_SIZE + 1)
+            .populate('author', 'username profilePicture')
+            .lean();
+
+        const hasMore = results.length > PAGE_SIZE;
+        const posts = hasMore ? results.slice(0, PAGE_SIZE) : results;
+
+        const nextCursor = hasMore
+            ? new Date(posts[posts.length - 1].createdAt).toISOString()
+            : null;
 
         return res.status(200).json({
             message: "Посты успешно получены",
             posts,
+            nextCursor,
         });
     } catch (error) {
         console.error(error);

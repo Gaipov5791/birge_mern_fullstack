@@ -11,12 +11,15 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Настройка Multer для обработки файлов
-// Используем memoryStorage, чтобы multer временно хранил файл в памяти
-const storage = multer.memoryStorage(); 
-console.log("--- 3. Multer Config: ИСПОЛЬЗУЕТСЯ memoryStorage. ---"); // ⭐ ЛОГ
+const TEN_MB = 10 * 1024 * 1024;
 
-// 🌟 ИСПРАВЛЕНИЕ 1: Фильтр для проверки типа файла (Изображения И Видео)
+const IMAGE_UPLOAD_TRANSFORMATION = [
+    { width: 1200, crop: 'limit', quality: 'auto:good', fetch_format: 'auto' },
+];
+
+// Настройка Multer для обработки файлов
+const storage = multer.memoryStorage();
+
 const fileFilter = (req, file, cb) => {
     const isImage = file.mimetype.startsWith('image/');
     const isVideo = file.mimetype.startsWith('video/');
@@ -24,20 +27,18 @@ const fileFilter = (req, file, cb) => {
     if (isImage || isVideo) {
         cb(null, true);
     } else {
-        // Передача ошибки, которая будет поймана Multer'ом и обработана
         cb(new Error('Неподдерживаемый тип файла. Разрешены только изображения и видео.'), false);
     }
 };
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        // Увеличим лимит для видео (например, до 50MB), если это необходимо
-        fileSize: 1024 * 1024 * 50 // Ограничение размера файла: 50MB (пример)
-    }
+        fileSize: TEN_MB,
+    },
 });
 
-export { cloudinary, upload };
+export { cloudinary, upload, IMAGE_UPLOAD_TRANSFORMATION, TEN_MB };
 
 export default cloudinary;

@@ -1,38 +1,39 @@
 import express from "express";
-import { 
-    createPost, 
-    getPosts, 
-    getUserPosts, 
-    likePost, 
-    deletePost, 
+import multer from "multer";
+import {
+    createPost,
+    getPosts,
+    getUserPosts,
+    likePost,
+    deletePost,
     updatePost,
     getPostById,
     getTimelinePosts,
-    getPostsByHashtag 
+    getPostsByHashtag,
 } from "../controllers/postController.js";
-import { protect } from "../middleware/authMddleware.js";
-import { upload } from "../config/cloudinaryConfig.js"; // Импорт middleware для загрузки файлов
+import { protect } from "../middleware/authMiddleware.js";
+import { upload } from "../config/cloudinaryConfig.js";
 
 const router = express.Router();
 
+const handleUpload = (req, res, next) => {
+    upload.array('files', 5)(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ message: 'Файл слишком большой (максимум 10 МБ)' });
+            }
+            return res.status(400).json({ message: err.message });
+        }
+        if (err) {
+            return res.status(400).json({ message: err.message });
+        }
+        next();
+    });
+};
+
 router.get("/timeline", protect, getTimelinePosts);
 
-router.post(
-    '/create', 
-    protect, 
-    (req, res, next) => {
-        console.log("--- 1. Вход в роут /create. Запуск Multer. ---");
-        next();
-    },
-    upload.array('files', 5), 
-    (req, res, next) => {
-        console.log("--- 2. Multer завершил работу. Передача в контроллер. ---");
-        next();
-    },
-    createPost
-);
-// router.post("/create", protect, upload.array('files', 5), createPost);
-router.get("/", protect, getPosts);
+router.post('/create', protect, handleUpload, createPost);router.get("/", protect, getPosts);
 router.get("/hashtag/:tag_name", protect, getPostsByHashtag);
 router.get("/user/:userId", protect, getUserPosts);
 router.put("/like/:id", protect, likePost);

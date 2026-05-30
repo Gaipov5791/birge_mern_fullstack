@@ -11,7 +11,6 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import CommentPostPage from './pages/CommentPostPage';
 import DiscoverPage from './pages/DiscoverPage';
-import ChatPage from './pages/ChatPage';
 import TrendsPage from './pages/TrendsPage';
 import UsersPage from './pages/UsersPage';
 import HashtagFeedPage from './pages/HashtagFeedPage';
@@ -106,7 +105,6 @@ const MainApp = () => {
                 <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
                 <Route path="/profile/:id" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
                 <Route path="/post/:id" element={<PrivateRoute><CommentPostPage /></PrivateRoute>} />
-                <Route path="/chat/:receiverId" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
             </Routes>
         </>
     );

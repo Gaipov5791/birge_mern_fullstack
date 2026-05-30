@@ -4,11 +4,8 @@ import { useSelector } from 'react-redux';
 import { 
     FaHome, 
     FaUserCircle, 
-    FaComments, 
     FaSignOutAlt,
-    FaPlusSquare, // Новая иконка для кнопки "Создать Пост"
-    FaFeatherAlt, 
-    FaEnvelopeOpenText
+    FaPlusSquare,
 } from 'react-icons/fa';
 
 // ⭐ Компонент для стилизации ссылок в сайдбаре
@@ -66,7 +63,6 @@ function Sidebar({ onLogout }) {
             {/* 2. Основная Навигация */}
             <nav className="space-y-2">
                 <SidebarLink to="/dashboard" icon={FaHome} label="Лента" />
-                <SidebarLink to="/chat" icon={FaComments} label="Чаты" />
                 <SidebarLink to={`/profile/${userId}`} icon={FaUserCircle} label="Профиль" />
             </nav>
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { getPosts, deletePost } from '../redux/features/posts/postThunks'; // ⭐ Добавили импорты thunk-ов
+import { getPosts, deletePost } from '../redux/features/posts/postThunks';
 
 import { logoutUser as logoutUserThunk } from '../redux/features/auth/authThunks'; // ⭐ Импортируем thunk для выхода
 import { reset as resetAuth } from '../redux/features/auth/authSlice'; // ⭐ Импортируем редьюсер для сброса auth состояния
@@ -19,7 +19,7 @@ import {
 import PostForm from '../components/PostForm';
 import PostItem from '../components/PostItem';
 import LoadingModal from '../components/common/LoadingModal'; 
-import ConfirmationModal from '../components/chat/ConfirmationModal'; // Предполагаем, что он в common
+import ConfirmationModal from '../components/common/ConfirmationModal';
 // ⭐ НОВЫЙ ИМПОРТ: Предполагаем, что у вас есть компонент для редактирования поста
 import PostEditModal from '../components/common/PostEditModal'; 
 import PostSkeleton from '../components/posts/PostSkeleton';
@@ -37,7 +37,9 @@ function DashboardPage() {
         isLoading, 
         isError, 
         message, 
-        postsLoaded,
+        postsLoaded,
+        nextCursor,
+        isLoadingMore,
         isPostOperationLoading,
         // ⭐ ИЗМЕНЕНИЯ: Извлекаем новые состояния для модальных окон
         postIdToDelete,
@@ -47,7 +49,8 @@ function DashboardPage() {
         (state) => state.posts
     );
 
-    const postRefs = useRef({});
+    const postRefs = useRef({});
+    const loadMoreRef = useRef(null);
 
     // ⭐ ЛОКАЛЬНЫЙ onLogout для передачи в Sidebar (Позже можно вынести выше)
     const onLogout = useCallback(() => {
@@ -76,7 +79,28 @@ function DashboardPage() {
     const loadingMessage = isPostOperationLoading ? message : "Загрузка...";
 
 
-    // ⭐ 1. useEffect для загрузки постов 
+    const handleLoadMore = useCallback(() => {
+        if (!nextCursor || isLoadingMore) return;
+        dispatch(getPosts({ cursor: nextCursor }));
+    }, [dispatch, nextCursor, isLoadingMore]);
+
+    useEffect(() => {
+        if (!loadMoreRef.current || !nextCursor) return undefined;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    handleLoadMore();
+                }
+            },
+            { rootMargin: '200px' }
+        );
+
+        observer.observe(loadMoreRef.current);
+        return () => observer.disconnect();
+    }, [handleLoadMore, nextCursor]);
+
+    // ⭐ 1. useEffect для загрузки постов 
     useEffect(() => {
         if (user && !postsLoaded) {
             dispatch(getPosts());
@@ -177,6 +201,21 @@ function DashboardPage() {
                                     <PostItem post={post} />
                                 </div>
                             ))}
+                            {(nextCursor || isLoadingMore) && (
+                                <div ref={loadMoreRef} className="flex flex-col items-center py-8 gap-4">
+                                    {isLoadingMore ? (
+                                        <FaSpinner className="animate-spin text-3xl text-blue-400" />
+                                    ) : nextCursor ? (
+                                        <button
+                                            type="button"
+                                            onClick={handleLoadMore}
+                                            className="px-6 py-2 bg-neutral-800 border border-neutral-700 rounded-full text-gray-300 hover:text-blue-400 hover:border-blue-600 transition-colors"
+                                        >
+                                            Показать ещё
+                                        </button>
+                                    ) : null}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         user && !isLoading && (

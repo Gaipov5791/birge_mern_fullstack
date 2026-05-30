@@ -13,18 +13,17 @@ export const createPost = createAsyncThunk(
         }
 });
 
-// Получить все посты
+// Получить посты ленты (первая страница или следующая по cursor)
 export const getPosts = createAsyncThunk(
-    'posts/getPosts',
-    async (_, thunkAPI) => {
-        try {
-            const response = await postService.getPosts();
-            return response.posts;
-        } catch (error) {
-            const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
-            return thunkAPI.rejectWithValue(message);
-        }
-    }
+    'posts/getPosts',
+    async ({ cursor = null } = {}, thunkAPI) => {
+        try {
+            return await postService.getPosts(cursor);
+        } catch (error) {
+            const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
 );
 
 // Получить посты конкретного пользователя

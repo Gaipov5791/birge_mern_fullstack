@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect } from '../middleware/authMddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 import { addCommentToPost, getCommentsForPost, deleteComment, updateComment } from '../controllers/commentController.js';
 
 const router = express.Router();

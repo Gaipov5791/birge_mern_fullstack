@@ -1,6 +1,6 @@
 import express from 'express';
 import { getTrends } from '../controllers/trendController.js';
-import { protect } from '../middleware/authMddleware.js'; // Импортируем protect на случай, если он понадобится
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
