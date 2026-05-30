@@ -35,27 +35,45 @@ function Navbar() {
     const notificationButtonRef = useRef(null);
     const notificationPanelRef = useRef(null);
 
-    const fetchUnreadCount = useCallback(async () => {
-        if (!user) return;
-        try {
-            const count = await notificationService.getUnreadCount();
-            setUnreadCount(count);
-        } catch (error) {
-            console.error('Ошибка получения счётчика уведомлений:', error);
-        }
-    }, [user]);
+    const isAuthenticated = Boolean(user?._id);
 
     useEffect(() => {
-        if (!user) {
+        if (!isAuthenticated) {
             setUnreadCount(0);
             return undefined;
         }
 
-        fetchUnreadCount();
-        const intervalId = setInterval(fetchUnreadCount, POLL_INTERVAL_MS);
+        let cancelled = false;
 
-        return () => clearInterval(intervalId);
-    }, [user, fetchUnreadCount]);
+        const fetchCount = async () => {
+            const token = localStorage.getItem('token');
+            if (!token || cancelled) return;
+
+            try {
+                const count = await notificationService.getUnreadCount();
+                if (!cancelled) {
+                    setUnreadCount(count);
+                }
+            } catch (error) {
+                if (cancelled) return;
+
+                if (error.response?.status === 401) {
+                    setUnreadCount(0);
+                    return;
+                }
+
+                console.error('Ошибка получения счётчика уведомлений:', error);
+            }
+        };
+
+        fetchCount();
+        const intervalId = setInterval(fetchCount, POLL_INTERVAL_MS);
+
+        return () => {
+            cancelled = true;
+            clearInterval(intervalId);
+        };
+    }, [isAuthenticated]);
 
     const onLogout = useCallback(() => {
         dispatch(logoutUser());

@@ -36,8 +36,7 @@ function DashboardPage() {
         timelinePosts, 
         isLoading, 
         isError, 
-        message, 
-        postsLoaded,
+        message, 
         nextCursor,
         isLoadingMore,
         isPostOperationLoading,
@@ -51,6 +50,7 @@ function DashboardPage() {
 
     const postRefs = useRef({});
     const loadMoreRef = useRef(null);
+    const hasFetchedPostsRef = useRef(false);
 
     // ⭐ ЛОКАЛЬНЫЙ onLogout для передачи в Sidebar (Позже можно вынести выше)
     const onLogout = useCallback(() => {
@@ -85,11 +85,11 @@ function DashboardPage() {
     }, [dispatch, nextCursor, isLoadingMore]);
 
     useEffect(() => {
-        if (!loadMoreRef.current || !nextCursor) return undefined;
+        if (!loadMoreRef.current || !nextCursor || isLoadingMore) return undefined;
 
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting) {
+                if (entries[0].isIntersecting && nextCursor && !isLoadingMore) {
                     handleLoadMore();
                 }
             },
@@ -98,18 +98,26 @@ function DashboardPage() {
 
         observer.observe(loadMoreRef.current);
         return () => observer.disconnect();
-    }, [handleLoadMore, nextCursor]);
+    }, [handleLoadMore, nextCursor, isLoadingMore]);
 
-    // ⭐ 1. useEffect для загрузки постов 
-    useEffect(() => {
-        if (user && !postsLoaded) {
-            dispatch(getPosts());
-        }
+    const userId = user?._id;
 
-        return () => {
-            dispatch(reset()); 
-        };
-    }, [dispatch, user, postsLoaded]);
+    useEffect(() => {
+        if (!userId) {
+            hasFetchedPostsRef.current = false;
+            return undefined;
+        }
+
+        if (!hasFetchedPostsRef.current) {
+            hasFetchedPostsRef.current = true;
+            dispatch(getPosts());
+        }
+
+        return () => {
+            hasFetchedPostsRef.current = false;
+            dispatch(reset());
+        };
+    }, [dispatch, userId]);
 
     // ⭐ 2. useEffect для обработки ошибок
     useEffect(() => {
