@@ -1,5 +1,6 @@
 import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
+import { createNotification } from "../utils/createNotification.js";
 
 // @desc    Добавить комментарий к посту
 // @route   POST /api/comments/:postId
@@ -38,7 +39,15 @@ export const addCommentToPost = async (req, res) => {
 
         const populatedComment = await Comment.findById(createdComment._id).populate("user", "username profilePicture");
 
-        // ⭐ ИСПРАВЛЕНИЕ: Используем сохраненный объект поста (savedPost) и популируем его.
+        if (String(post.author) !== String(userId)) {
+            await createNotification({
+                receiverId: post.author,
+                senderId: userId,
+                type: 'comment',
+                postId,
+            });
+        }
+
         const updatedPost = await savedPost.populate({ 
             path: 'author', 
             select: 'username profilePicture' 

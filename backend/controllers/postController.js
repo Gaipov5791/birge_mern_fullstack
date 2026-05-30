@@ -1,6 +1,7 @@
 import Post from "../models/Post.js";
 import User from "../models/User.js";
 import cloudinary, { IMAGE_UPLOAD_TRANSFORMATION } from "../config/cloudinaryConfig.js";
+import { createNotification } from "../utils/createNotification.js";
 
 const PAGE_SIZE = 20;
 
@@ -252,9 +253,18 @@ export const likePost = async (req, res) => {
             post.likes.pull(userId);
         } else {
             post.likes.push(userId);
+
+            if (String(post.author) !== String(userId)) {
+                await createNotification({
+                    receiverId: post.author,
+                    senderId: userId,
+                    type: 'like',
+                    postId,
+                });
+            }
         }
 
-        await post.save(); // Сохраняем изменения (добавление/удаление лайка)
+        await post.save();
 
         const populatedPost = await Post.findById(post._id)
                                       .populate('author', 'username profilePicture'); //

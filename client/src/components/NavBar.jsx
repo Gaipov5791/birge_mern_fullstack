@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../redux/features/auth/authThunks";
 import { reset as resetAuth } from "../redux/features/auth/authSlice";
+import notificationService from "../api/notificationService";
+import ActivityNotificationPanel from "./ActivityNotificationPanel";
 import {
     FaSignInAlt,
     FaUserPlus,
@@ -14,7 +16,10 @@ import {
     FaChartLine,
     FaUserFriends,
     FaEnvelopeOpenText,
+    FaBell,
 } from "react-icons/fa";
+
+const POLL_INTERVAL_MS = 45_000;
 
 function Navbar() {
     const navigate = useNavigate();
@@ -22,6 +27,35 @@ function Navbar() {
     const { user } = useSelector((state) => state.auth);
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+
+    const notificationButtonRef = useRef(null);
+    const notificationPanelRef = useRef(null);
+
+    const fetchUnreadCount = useCallback(async () => {
+        if (!user) return;
+        try {
+            const count = await notificationService.getUnreadCount();
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('Ошибка получения счётчика уведомлений:', error);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) {
+            setUnreadCount(0);
+            return undefined;
+        }
+
+        fetchUnreadCount();
+        const intervalId = setInterval(fetchUnreadCount, POLL_INTERVAL_MS);
+
+        return () => clearInterval(intervalId);
+    }, [user, fetchUnreadCount]);
 
     const onLogout = useCallback(() => {
         dispatch(logoutUser());
@@ -31,10 +65,40 @@ function Navbar() {
 
     const handleMenuToggle = useCallback(() => {
         setIsMenuOpen((prev) => !prev);
+        setIsNotificationsOpen(false);
     }, []);
 
     const handleMenuClose = useCallback(() => {
         setIsMenuOpen(false);
+    }, []);
+
+    const handleNotificationsToggle = useCallback(async () => {
+        if (!user) return;
+
+        if (isNotificationsOpen) {
+            setIsNotificationsOpen(false);
+            return;
+        }
+
+        setIsLoadingNotifications(true);
+        setIsNotificationsOpen(true);
+
+        try {
+            const [list] = await Promise.all([
+                notificationService.getNotifications(),
+                notificationService.markNotificationsAsRead(),
+            ]);
+            setNotifications(list);
+            setUnreadCount(0);
+        } catch (error) {
+            console.error('Ошибка загрузки уведомлений:', error);
+        } finally {
+            setIsLoadingNotifications(false);
+        }
+    }, [user, isNotificationsOpen]);
+
+    const handleCloseNotifications = useCallback(() => {
+        setIsNotificationsOpen(false);
     }, []);
 
     const userPhoto =
@@ -42,6 +106,38 @@ function Navbar() {
         "https://placehold.co/40x40/1f2937/FFFFFF?text=P";
     const userName = user?.username || "Гость";
     const userId = user?._id;
+
+    const notificationBadge = unreadCount > 0 && (
+        <span
+            className="absolute top-1 right-1 flex items-center justify-center
+                       text-xs font-bold leading-none text-red-100
+                       bg-red-600 rounded-full min-w-[1.25rem] h-5 px-1"
+        >
+            {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+    );
+
+    const notificationButton = user && (
+        <div className="relative" ref={notificationButtonRef}>
+            <button
+                type="button"
+                onClick={handleNotificationsToggle}
+                className="relative p-2 rounded-lg transition-colors hover:bg-neutral-800 text-gray-300 hover:text-blue-400 focus:outline-none"
+                aria-label="Уведомления"
+            >
+                <FaBell className="text-2xl" />
+                {notificationBadge}
+            </button>
+            <ActivityNotificationPanel
+                isOpen={isNotificationsOpen}
+                onClose={handleCloseNotifications}
+                notifications={notifications}
+                isLoading={isLoadingNotifications}
+                panelRef={notificationPanelRef}
+                buttonRef={notificationButtonRef}
+            />
+        </div>
+    );
 
     return (
         <nav className="bg-neutral-900 border-b border-neutral-800 shadow-xl p-4 sticky top-0 z-50 transition-all duration-300">
@@ -54,7 +150,9 @@ function Navbar() {
                 </Link>
 
                 <ul className="hidden lg:flex space-x-6 items-center relative">
-                    {!user && (
+                    {user ? (
+                        <li>{notificationButton}</li>
+                    ) : (
                         <>
                             <li>
                                 <Link
@@ -77,6 +175,7 @@ function Navbar() {
                 </ul>
 
                 <div className="lg:hidden flex items-center space-x-4">
+                    {notificationButton}
                     <button
                         onClick={handleMenuToggle}
                         className="text-gray-300 hover:text-blue-400 focus:outline-none p-2 rounded-lg transition-colors hover:bg-neutral-800"

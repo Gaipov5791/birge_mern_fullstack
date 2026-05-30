@@ -12,6 +12,7 @@ import postRoutes from '../backend/routes/postRoutes.js';
 import commentRoutes from '../backend/routes/commentRoutes.js';
 import trendRoutes from '../backend/routes/trendRoutes.js';
 import feedbackRoutes from '../backend/routes/feedbackRoutes.js';
+import notificationRoutes from '../backend/routes/notificationRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
@@ -73,6 +74,7 @@ const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/trends', trendRoutes);
