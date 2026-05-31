@@ -8,8 +8,15 @@ body {
 
 /* Стили для карусели медиа в постах */
 .media-carousel-container .swiper,
+.media-carousel-container .swiper-wrapper,
 .media-carousel-container .swiper-slide {
     width: 100% !important;
+    height: 100% !important;
+}
+
+.media-carousel-container .swiper-slide > * {
+    height: 100%;
+    min-height: 0;
 }
 
 /* Базовые стили для пагинации (точек) */

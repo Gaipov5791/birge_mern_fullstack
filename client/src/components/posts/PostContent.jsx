@@ -166,12 +166,12 @@ function PostContent({ post, compactMedia = false }) {
     }, [post.text, isExpanded, toggleExpand, t]);
 
 
-    const mediaContainerClass = useMemo(() => (
-        compactMedia
-            ? 'relative flex justify-center items-center cursor-pointer p-1 bg-neutral-700 rounded-xl transition duration-300 hover:bg-neutral-600 overflow-hidden w-full max-h-[280px] lg:max-h-[220px]'
-            : 'relative flex justify-center items-center cursor-pointer p-1 bg-neutral-700 rounded-xl transition duration-300 hover:bg-neutral-600 overflow-hidden w-full max-h-96'
+    const mediaFrameClass = useMemo(() => (
+        compactMedia ? 'h-[280px] lg:h-[220px]' : 'h-96'
     ), [compactMedia]);
-    const mediaClass = 'max-h-full max-w-full w-auto rounded-lg object-contain shadow-xl shadow-black/50 transition duration-300';
+
+    const mediaContainerClass = 'relative flex justify-center items-center cursor-pointer p-1 bg-neutral-700 rounded-xl transition duration-300 hover:bg-neutral-600 overflow-hidden w-full h-full min-h-0';
+    const mediaClass = 'block h-full w-full max-h-full max-w-full object-contain rounded-lg shadow-xl shadow-black/50';
 
     // ⭐ 2. Компонент для рендеринга ОДНОГО слайда
     const renderSlideContent = useCallback((item) => {
@@ -245,7 +245,7 @@ function PostContent({ post, compactMedia = false }) {
                 </div>
             )}
 
-                <div className="media-carousel-container w-full overflow-hidden">
+                <div className={`media-carousel-container w-full overflow-hidden ${mediaFrameClass}`}>
                     <Swiper
                         modules={[Navigation, Pagination]}
                         slidesPerView={1}
@@ -256,10 +256,10 @@ function PostContent({ post, compactMedia = false }) {
                             bulletActiveClass: 'bg-blue-500',
                         }}
                         loop={false}
-                        className="mySwiper rounded-xl w-full"
+                        className="mySwiper rounded-xl w-full h-full"
                     >
                         {mediaItems.map((item, index) => (
-                            <SwiperSlide key={index} className="!w-full">
+                            <SwiperSlide key={index} className="!w-full !h-full">
                                 {renderSlideContent(item)}
                             </SwiperSlide>
                         ))}
