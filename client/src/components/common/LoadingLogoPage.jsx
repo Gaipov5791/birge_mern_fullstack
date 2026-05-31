@@ -1,5 +1,4 @@
 import React from 'react';
-import { FaGlobe } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 
 function LoadingLogoPage() {
@@ -9,46 +8,62 @@ function LoadingLogoPage() {
         <>
             <style>
                 {`
-                @keyframes flip-y {
+                @keyframes brand-gradient-flow {
                     0%, 100% {
-                        transform: perspective(600px) rotateY(0deg);
-                        opacity: 1;
+                        background-position: 0% 50%;
                     }
                     50% {
-                        transform: perspective(600px) rotateY(180deg);
-                        opacity: 0.2;
+                        background-position: 100% 50%;
                     }
                 }
-                .animate-flip-y-loop {
-                    animation: flip-y 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                @keyframes brand-glow-pulse {
+                    0%, 100% {
+                        opacity: 0.35;
+                        transform: scale(1);
+                    }
+                    50% {
+                        opacity: 0.55;
+                        transform: scale(1.05);
+                    }
+                }
+                .brand-logo-text {
+                    background: linear-gradient(
+                        90deg,
+                        #60a5fa 0%,
+                        #818cf8 22%,
+                        #3b82f6 45%,
+                        #6366f1 68%,
+                        #60a5fa 100%
+                    );
+                    background-size: 220% auto;
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    color: transparent;
+                    animation: brand-gradient-flow 3.5s ease-in-out infinite;
+                }
+                .brand-logo-glow {
+                    background: radial-gradient(
+                        ellipse at center,
+                        rgba(59, 130, 246, 0.35) 0%,
+                        rgba(99, 102, 241, 0.15) 45%,
+                        transparent 70%
+                    );
+                    animation: brand-glow-pulse 3.5s ease-in-out infinite;
                 }
                 `}
             </style>
-            
-            <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-neutral-950 transition-opacity duration-500">
-                <FaGlobe 
-                    className='text-7xl text-blue-400 mb-6 animate-pulse' 
-                />
 
-                <h1 className="text-5xl sm:text-7xl font-extrabold text-gray-100 uppercase tracking-widest transition-colors duration-300 animate-flip-y-loop">
-                    {t('brand')}
-                </h1>
-
-                <div className="mt-10 flex space-x-2">
-                    <div 
-                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" 
-                        style={{ animationDelay: '0s', animationDuration: '1s' }}
-                    ></div>
-                    <div 
-                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" 
-                        style={{ animationDelay: '0.2s', animationDuration: '1s' }}
-                    ></div>
-                    <div 
-                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" 
-                        style={{ animationDelay: '0.4s', animationDuration: '1s' }}
-                    ></div>
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-950 transition-opacity duration-500">
+                <div className="relative flex items-center justify-center">
+                    <div
+                        className="brand-logo-glow absolute inset-0 -m-16 sm:-m-24 pointer-events-none"
+                        aria-hidden="true"
+                    />
+                    <h1 className="relative text-5xl sm:text-7xl font-extrabold uppercase tracking-widest brand-logo-text select-none">
+                        {t('brand')}
+                    </h1>
                 </div>
-                
             </div>
         </>
     );
