@@ -1,12 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 
-const IMAGE_FALLBACK_DATA =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui' font-size='24' fill='%236b7280'>Image not found</text></svg>";
+const getImageFallbackData = (label) =>
+  `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui' font-size='24' fill='%236b7280'>${encodeURIComponent(label)}</text></svg>`;
 
 function MediaModal({ mediaUrl, mediaType, onClose }) {
+  const { t } = useTranslation();
   const videoRef = useRef(null);
   const [videoError, setVideoError] = useState(false);
+  const imageFallbackData = useMemo(() => getImageFallbackData(t('common.imageNotFound')), [t]);
 
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
@@ -25,7 +28,7 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
   useEffect(() => {
     if (mediaType === 'video' && mediaUrl && videoRef.current) {
       const v = videoRef.current;
-      const t = setTimeout(async () => {
+      const timer = setTimeout(async () => {
         try {
           await v.play();
         } catch {
@@ -33,11 +36,11 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
             v.muted = true;
             await v.play();
           } catch {
-            // оставим пользователю кнопку Play
+            // leave Play button for user
           }
         }
       }, 0);
-      return () => clearTimeout(t);
+      return () => clearTimeout(timer);
     }
   }, [mediaType, mediaUrl]);
 
@@ -56,6 +59,7 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-white text-2xl z-50 hover:text-gray-300 transition-colors"
+          aria-label={t('common.close')}
         >
           <FaTimes />
         </button>
@@ -63,11 +67,11 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
         {mediaType === 'image' && (
           <img
             src={mediaUrl}
-            alt="Полноэкранное изображение"
+            alt={t('media.fullscreenImage')}
             className="max-w-full max-h-[85vh] object-contain"
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = IMAGE_FALLBACK_DATA;
+              e.currentTarget.src = imageFallbackData;
             }}
           />
         )}
@@ -85,7 +89,7 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
 
         {mediaType === 'video' && videoError && (
           <div className="flex items-center justify-center w-[80vw] max-w-[800px] h-[45vw] max-h-[450px] bg-gray-200 rounded-md text-gray-600 text-center px-6">
-            Видео недоступно или повреждено.
+            {t('media.videoUnavailable')}
           </div>
         )}
       </div>
@@ -94,4 +98,3 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
 }
 
 export default MediaModal;
-

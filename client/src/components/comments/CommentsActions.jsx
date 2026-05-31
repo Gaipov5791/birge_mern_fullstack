@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { deleteComment, updateComment } from '../../redux/features/comments/commentThunks';
 import CommentItem from '../CommentItem';
 import ConfirmationModal from '../common/ConfirmationModal';
@@ -8,27 +9,25 @@ import LoadingModal from '../common/LoadingModal';
 import { toastSuccess, toastError } from '../../redux/features/notifications/notificationSlice';
 
 function CommentActions({ comments, currentUserId, commentsEndRef }) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
 
     const { 
         isCommentOperationLoading,
         loadingMessage,
-        newlyCreatedCommentId // Нужен для логики Ref
+        newlyCreatedCommentId
     } = useSelector((state) => state.comments);
 
-    // ⭐ СОСТОЯНИЕ ДЛЯ МОДАЛЬНОГО ОКНА УДАЛЕНИЯ
     const [confirmDeleteState, setConfirmDeleteState] = useState({
         isOpen: false,
         commentId: null,
     });
     
-    // ⭐ СОСТОЯНИЕ ДЛЯ МОДАЛЬНОГО ОКНА РЕДАКТИРОВАНИЯ
     const [editCommentState, setEditCommentState] = useState({
         isOpen: false,
-        comment: null, // Храним весь объект комментария
+        comment: null,
     });
 
-    // --- ХЕНДЛЕРЫ УДАЛЕНИЯ ---
     const handleDeleteConfirmStart = useCallback((commentId) => {
         setConfirmDeleteState({ isOpen: true, commentId: commentId });
     }, []);
@@ -45,12 +44,11 @@ function CommentActions({ comments, currentUserId, commentsEndRef }) {
         if (commentId) {
             dispatch(deleteComment(commentId))
                 .unwrap()
-                .then(() => dispatch(toastSuccess('Комментарий успешно удален!')))
-                .catch((error) => dispatch(toastError(`Ошибка при удалении: ${error.payload || error.message}`)));
+                .then(() => dispatch(toastSuccess(t('comment.deleted'))))
+                .catch((error) => dispatch(toastError(t('comment.deleteError', { error: error.payload || error.message }))));
         }
-    }, [dispatch, confirmDeleteState]);
+    }, [dispatch, confirmDeleteState, t]);
 
-    // --- ХЕНДЛЕРЫ РЕДАКТИРОВАНИЯ ---
     const handleEditStart = useCallback((comment) => {
         setEditCommentState({ isOpen: true, comment });
     }, []);
@@ -63,22 +61,19 @@ function CommentActions({ comments, currentUserId, commentsEndRef }) {
         const commentToUpdate = editCommentState.comment;
         
         if (!commentToUpdate || !newText.trim()) {
-            dispatch(toastError('Некорректные данные для обновления.'));
+            dispatch(toastError(t('comment.invalidUpdate')));
             return;
         }
 
         try {
-            // Вызываем Thunk для обновления
             await dispatch(updateComment({ commentId: commentToUpdate._id, text: newText })).unwrap();
-            dispatch(toastSuccess('Комментарий обновлен!'));
-            // Закрываем модалку при успехе
+            dispatch(toastSuccess(t('comment.updated')));
             setEditCommentState({ isOpen: false, comment: null }); 
         } catch (error) {
-            const errorMessage = error.payload?.message || error.message || 'Ошибка при обновлении комментария.';
-            dispatch(toastError(`Ошибка: ${errorMessage}`));
-            // Оставляем модалку открытой при ошибке
+            const errorMessage = error.payload?.message || error.message || t('comment.genericError');
+            dispatch(toastError(t('comment.updateFailed', { error: errorMessage })));
         }
-    }, [editCommentState.comment, dispatch]);
+    }, [editCommentState.comment, dispatch, t]);
 
 
     return (
@@ -88,10 +83,9 @@ function CommentActions({ comments, currentUserId, commentsEndRef }) {
                     {comments.map((comment) => (
                         <div
                             key={comment._id}
-                            // ⭐ ПРИМЕНЕНИЕ REF для скролла
                             ref={comment._id === newlyCreatedCommentId ? commentsEndRef : null} 
                         >
-                            <CommentItem  
+                            <CommentItem 
                                 comment={comment} 
                                 currentUserId={currentUserId}
                                 onDeleteConfirmStart={handleDeleteConfirmStart}
@@ -101,27 +95,22 @@ function CommentActions({ comments, currentUserId, commentsEndRef }) {
                     ))}
                 </div>
             ) : (
-                <p className="text-gray-600 text-center">Комментариев пока нет.</p>
+                <p className="text-gray-600 text-center">{t('comment.none')}</p>
             )}
 
-            {/* --- МОДАЛЬНЫЕ ОКНА --- */}
-
-            {/* Модальное окно загрузки для операций обновления/удаления */}
             <LoadingModal 
                 isOpen={isCommentOperationLoading && !editCommentState.isOpen}
-                message={loadingMessage || "Загрузка..."}
+                message={loadingMessage || t('common.loading')}
             />
 
-            {/* Модальное окно подтверждения удаления */}
             <ConfirmationModal
                 isOpen={confirmDeleteState.isOpen}
                 onClose={handleDeleteConfirmClose}
                 onConfirm={handleDeleteConfirm}
-                title="Подтвердите удаление"
-                message="Вы уверены, что хотите безвозвратно удалить этот комментарий?"
+                title={t('comment.deleteTitle')}
+                message={t('comment.deleteMessage')}
             />
 
-            {/* Модальное окно редактирования комментария */}
             <CommentEditModal
                 isOpen={editCommentState.isOpen}
                 onClose={handleEditClose}

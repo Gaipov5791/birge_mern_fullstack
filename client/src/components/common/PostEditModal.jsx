@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { updatePost } from '../../redux/features/posts/postThunks';
 import { toastError, toastSuccess } from '../../redux/features/notifications/notificationSlice';
 import PropTypes from 'prop-types';
@@ -7,6 +8,7 @@ import PropTypes from 'prop-types';
 const ANIMATION_DURATION = 500;
 
 function PostEditModal({ isOpen, onClose, post }) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const { isPostOperationLoading } = useSelector(state => state.posts);
     
@@ -46,12 +48,12 @@ function PostEditModal({ isOpen, onClose, post }) {
         onClose(); // Закрывает модальное окно (устанавливает isOpen: false)
         try {
             await dispatch(updatePost({ postId: post._id, postData: { text: editedText } })).unwrap();
-            dispatch(toastSuccess('Пост успешно обновлен!'));
+            dispatch(toastSuccess(t('post.updated')));
             
         } catch (error) {
-            dispatch(toastError(`Не удалось обновить пост: ${error.message || 'Произошла ошибка.'}`));
+            dispatch(toastError(t('post.updateFailed', { error: error.message || t('comment.genericError') })));
         }
-    }, [editedText, post, dispatch, isPostOperationLoading, onClose]);
+    }, [editedText, post, dispatch, isPostOperationLoading, onClose, t]);
 
 
     if (!isRendered) return null; // Фактический демонтаж
@@ -74,7 +76,7 @@ function PostEditModal({ isOpen, onClose, post }) {
             >
                 <div className="p-6">
                     <h2 className="text-xl font-bold text-gray-100 mb-4 border-b border-neutral-700 pb-2">
-                        Редактировать пост
+                        {t('post.editTitle')}
                     </h2>
 
                     <textarea
@@ -86,7 +88,7 @@ function PostEditModal({ isOpen, onClose, post }) {
                         "
                         value={editedText}
                         onChange={(e) => setEditedText(e.target.value)}
-                        placeholder="Ваш обновленный текст..."
+                        placeholder={t('post.editPlaceholder')}
                         disabled={isPostOperationLoading}
                     />
                 </div>
@@ -99,7 +101,7 @@ function PostEditModal({ isOpen, onClose, post }) {
                         className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-300 bg-neutral-700 rounded-lg hover:bg-neutral-600 transition duration-200"
                         disabled={isPostOperationLoading}
                     >
-                        Отмена
+                        {t('common.cancel')}
                     </button>
                     <button
                         type="button"
@@ -111,7 +113,7 @@ function PostEditModal({ isOpen, onClose, post }) {
                         }`}
                         disabled={isPostOperationLoading}
                     >
-                        {isPostOperationLoading ? 'Сохранение...' : 'Сохранить изменения'}
+                        {isPostOperationLoading ? t('common.saving') : t('post.saveChanges')}
                     </button>
                 </div>
             </div>

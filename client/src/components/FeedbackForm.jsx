@@ -1,14 +1,15 @@
-// src/components/FeedbackForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { toastSuccess, toastError } from '../redux/features/notifications/notificationSlice'; 
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function FeedbackForm() {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
-    const { user } = useSelector(state => state.auth); // Получаем данные текущего пользователя
+    const { user } = useSelector(state => state.auth);
     const [formData, setFormData] = useState({ subject: '', message: '' });
     const [loading, setLoading] = useState(false);
 
@@ -22,33 +23,31 @@ function FeedbackForm() {
 
         const feedbackData = {
             ...formData,
-            // Добавляем email пользователя для идентификации, если он авторизован
-            userEmail: user ? user.email : 'Анонимный пользователь' 
+            userEmail: user ? user.email : t('common.anonymous')
         };
 
         try {
             await axios.post(API_URL + 'feedback', feedbackData);
-            dispatch(toastSuccess('Спасибо за ваш отзыв!'));
-            setFormData({ subject: '', message: '' }); // Очищаем форму
+            dispatch(toastSuccess(t('feedback.thanks')));
+            setFormData({ subject: '', message: '' });
         } catch (error) {
-            dispatch(toastError('Не удалось отправить отзыв. Попробуйте позже.'));
+            dispatch(toastError(t('feedback.sendFailed')));
         } finally {
             setLoading(false);
         }
     };
 
-    // Определяем, можно ли отправить форму
     const isFormValid = formData.subject.trim() !== '' && formData.message.trim() !== '';
 
     return (
         <form onSubmit={onSubmit} className="bg-neutral-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4 text-gray-100">Обратная связь</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-100">{t('feedback.title')}</h2>
             <input
                 type="text"
                 name="subject"
                 value={formData.subject}
                 onChange={onChange}
-                placeholder="Тема (например, 'Баг в ленте' или 'Предложение')"
+                placeholder={t('feedback.subjectPlaceholder')}
                 required
                 className="w-full p-3 mb-4 bg-neutral-700 border border-neutral-600 rounded text-gray-100 placeholder-gray-400"
             />
@@ -56,7 +55,7 @@ function FeedbackForm() {
                 name="message"
                 value={formData.message}
                 onChange={onChange}
-                placeholder="Ваше сообщение, замечание или предложение..."
+                placeholder={t('feedback.messagePlaceholder')}
                 required
                 rows="5"
                 className="w-full p-3 mb-4 bg-neutral-700 border border-neutral-600 rounded text-gray-100 placeholder-gray-400 resize-none"
@@ -71,7 +70,7 @@ function FeedbackForm() {
                 }
                 className="w-full p-3 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 disabled:bg-neutral-600 transition"
             >
-                {loading ? 'Отправка...' : 'Отправить отзыв'}
+                {loading ? t('feedback.sending') : t('feedback.send')}
             </button>
         </form>
     );

@@ -1,19 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-//Получаем базовый URL API из переменной окружения
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function CommentHeader({ post, commentsCount }) {
-    if (!post) return null; // Защита
+    const { t } = useTranslation();
 
-    const postAuthorUsername = post.author?.username || 'Неизвестный пользователь';
+    if (!post) return null;
+
+    const postAuthorUsername = post.author?.username || t('common.unknownUser');
     const postAuthorProfilePicture = post.author?.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
     const postAuthorId = post.author?._id;
-    const postCreatedAt = post.createdAt ? new Date(post.createdAt).toLocaleString('ru-RU') : 'Invalid Date';
+    const postCreatedAt = post.createdAt
+        ? new Date(post.createdAt).toLocaleString()
+        : t('common.invalidDate');
     const mediaUrl = post.image || post.video;
     const mediaType = post.image ? 'image' : (post.video ? 'video' : null);
     const fullMediaUrl = mediaUrl ? `${API_BASE_URL.replace(/\/api$/, '')}${mediaUrl}` : null;
+    const likesCount = post.likes?.length || 0;
 
     return (
         <div className="bg-neutral-800 rounded-3xl shadow-xl shadow-neutral-900/50 border-b-4 border-indigo-600 p-4 sm:p-6 mb-6">
@@ -22,7 +27,7 @@ function CommentHeader({ post, commentsCount }) {
                     <Link to={`/profile/${postAuthorId}`} className="flex items-center">
                         <img
                             src={postAuthorProfilePicture}
-                            alt="Профиль автора поста"
+                            alt={t('comment.postAuthorAlt')}
                             className="w-12 h-12 rounded-full mr-3 object-cover"
                         />
                         <div>
@@ -34,7 +39,7 @@ function CommentHeader({ post, commentsCount }) {
                     <div className="flex items-center">
                         <img
                             src={postAuthorProfilePicture}
-                            alt="Профиль автора поста"
+                            alt={t('comment.postAuthorAlt')}
                             className="w-12 h-12 rounded-full mr-3 object-cover"
                         />
                         <div>
@@ -55,13 +60,13 @@ function CommentHeader({ post, commentsCount }) {
                                 src={fullMediaUrl}
                                 controls
                                 className="w-full rounded-md max-h-96 object-contain"
-                                alt="Видео поста"
+                                aria-label={t('comment.postVideo')}
                             />
                         </div>
                     ) : (
                         <img
                             src={fullMediaUrl}
-                            alt="Изображение поста"
+                            alt={t('comment.postImage')}
                             className="w-full rounded-md max-h-96 object-contain"
                         />
                     )}
@@ -69,8 +74,8 @@ function CommentHeader({ post, commentsCount }) {
             )}
             
             <div className="flex justify-between items-center text-gray-400 text-xs sm:text-sm">
-                <span>{post.likes?.length || 0} Лайков</span>
-                <span>{commentsCount} Комментариев</span>
+                <span>{t('post.likes', { count: likesCount })}</span>
+                <span>{t('post.comments', { count: commentsCount })}</span>
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux'; 
+import { useTranslation } from 'react-i18next';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
 // ⭐ ФУНКЦИЯ ДЛЯ ПАРСИНГА ТЕКСТА КОММЕНТАРИЯ НА ССЫЛКИ
@@ -40,8 +41,7 @@ const parseCommentText = (text) => {
 };
 
 const CommentItem = ({ comment, onDeleteConfirmStart, onEditStart, currentUserId }) => {
-
-    // ⭐ СОСТОЯНИЕ ДЛЯ АНИМАЦИИ (ОСТАВЛЯЕМ)
+    const { t } = useTranslation();
     const [isMounted, setIsMounted] = useState(false);
     
     // ⭐ ЭФФЕКТ ДЛЯ ЗАПУСКА АНИМАЦИИ (ОСТАВЛЯЕМ)
@@ -89,11 +89,11 @@ const CommentItem = ({ comment, onDeleteConfirmStart, onEditStart, currentUserId
             <div className="flex items-center mb-4">
                 <img
                     src={comment.user?.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}
-                    alt="Профиль"
+                    alt={t('common.profile')}
                     className="w-8 h-8 rounded-full mr-3 object-cover"
                 />
                 <div>
-                    <p className="font-extrabold text-gray-100 text-lg hover:underline">{comment.user?.username || 'Неизвестный пользователь'}</p>
+                    <p className="font-extrabold text-gray-100 text-lg hover:underline">{comment.user?.username || t('common.unknownUser')}</p>
                     <p className="text-sm text-gray-400">{new Date(comment.createdAt).toLocaleString()}</p>
                 </div>
             </div>

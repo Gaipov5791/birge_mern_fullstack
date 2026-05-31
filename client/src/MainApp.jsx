@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'; // ⭐ Добавлен useState
-import { useDispatch, useSelector } from 'react-redux'; // ⭐ Добавлен useSelector
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate, Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ToastContainer from './components/common/ToastContainer';
 import { FaSpinner } from 'react-icons/fa';
 
@@ -26,6 +27,7 @@ import { getMe } from './redux/features/auth/authThunks';
 import { getRecommendedUsers } from './redux/features/users/userThunks'; // ⭐ Импорт Thunk рекомендаций
 
 const MainApp = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -82,7 +84,7 @@ const MainApp = () => {
         return (
             <div className="flex items-center justify-center min-h-screen bg-neutral-950">
                 <FaSpinner className="animate-spin text-4xl text-blue-400" />
-                <p className="ml-4 text-gray-400">Идет авторизация...</p>
+                <p className="ml-4 text-gray-400">{t('auth.authorizing')}</p>
             </div>
         );
     }

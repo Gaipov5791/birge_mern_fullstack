@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { logoutUser } from "../redux/features/auth/authThunks";
 import { reset as resetAuth } from "../redux/features/auth/authSlice";
 import notificationService from "../api/notificationService";
 import ActivityNotificationPanel from "./ActivityNotificationPanel";
+import LanguageSwitcher from "./common/LanguageSwitcher";
 import {
     FaSignInAlt,
     FaUserPlus,
@@ -22,6 +24,7 @@ import {
 const POLL_INTERVAL_MS = 45_000;
 
 function Navbar() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
@@ -122,7 +125,7 @@ function Navbar() {
     const userPhoto =
         user?.profilePicture ||
         "https://placehold.co/40x40/1f2937/FFFFFF?text=P";
-    const userName = user?.username || "Гость";
+    const userName = user?.username || t('common.guest');
     const userId = user?._id;
 
     const notificationBadge = unreadCount > 0 && (
@@ -141,7 +144,7 @@ function Navbar() {
                 type="button"
                 onClick={handleNotificationsToggle}
                 className="relative p-2 rounded-lg transition-colors hover:bg-neutral-800 text-gray-300 hover:text-blue-400 focus:outline-none"
-                aria-label="Уведомления"
+                aria-label={t('nav.notifications')}
             >
                 <FaBell className="text-2xl" />
                 {notificationBadge}
@@ -164,10 +167,11 @@ function Navbar() {
                     to="/"
                     className="text-blue-400 text-2xl uppercase font-extrabold transition-colors hover:text-blue-300 flex items-center"
                 >
-                    <FaGlobe className="mr-2 text-3xl" /> Бирге
+                    <FaGlobe className="mr-2 text-3xl" /> {t('brand')}
                 </Link>
 
-                <ul className="hidden lg:flex space-x-6 items-center relative">
+                <ul className="hidden lg:flex space-x-4 items-center relative">
+                    <li><LanguageSwitcher /></li>
                     {user ? (
                         <li>{notificationButton}</li>
                     ) : (
@@ -177,7 +181,7 @@ function Navbar() {
                                     to="/login"
                                     className="flex items-center px-4 py-2 bg-blue-600 rounded-lg text-white transition-all duration-200 hover:bg-blue-700 shadow-md"
                                 >
-                                    <FaSignInAlt className="mr-2" /> Вход
+                                    <FaSignInAlt className="mr-2" /> {t('nav.login')}
                                 </Link>
                             </li>
                             <li>
@@ -185,14 +189,15 @@ function Navbar() {
                                     to="/register"
                                     className="flex items-center text-blue-400 hover:text-blue-300"
                                 >
-                                    <FaUserPlus className="mr-2" /> Регистрация
+                                    <FaUserPlus className="mr-2" /> {t('nav.register')}
                                 </Link>
                             </li>
                         </>
                     )}
                 </ul>
 
-                <div className="lg:hidden flex items-center space-x-4">
+                <div className="lg:hidden flex items-center space-x-2">
+                    <LanguageSwitcher />
                     {notificationButton}
                     <button
                         onClick={handleMenuToggle}
@@ -226,7 +231,7 @@ function Navbar() {
                                 >
                                     <img
                                         src={userPhoto}
-                                        alt="Профиль"
+                                        alt={t('common.profile')}
                                         className="w-10 h-10 rounded-full object-cover ring-2 ring-blue-500/50"
                                         onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/1f2937/FFFFFF?text=P"; }}
                                     />
@@ -239,7 +244,7 @@ function Navbar() {
                                     className="flex items-center space-x-4 text-gray-300 font-medium text-lg hover:text-blue-400 p-3 rounded-lg hover:bg-neutral-700 transition"
                                 >
                                     <FaHome className="text-xl" />
-                                    <span>Главная лента</span>
+                                    <span>{t('nav.homeFeed')}</span>
                                 </Link>
 
                                 <Link
@@ -248,7 +253,7 @@ function Navbar() {
                                     className="flex items-center space-x-4 text-gray-300 font-medium text-lg hover:text-blue-400 p-3 rounded-lg hover:bg-neutral-700 transition"
                                 >
                                     <FaChartLine className="text-xl" />
-                                    <span>Тренды</span>
+                                    <span>{t('nav.trends')}</span>
                                 </Link>
 
                                 <Link
@@ -257,7 +262,7 @@ function Navbar() {
                                     className="flex items-center space-x-4 text-gray-300 font-medium text-lg hover:text-blue-400 p-3 rounded-lg hover:bg-neutral-700 transition"
                                 >
                                     <FaUserFriends className="text-xl" />
-                                    <span>Кого читать</span>
+                                    <span>{t('nav.whoToFollow')}</span>
                                 </Link>
 
                                 <Link
@@ -266,7 +271,7 @@ function Navbar() {
                                     className="flex items-center space-x-4 text-gray-300 font-medium text-lg hover:text-blue-400 p-3 rounded-lg hover:bg-neutral-700 transition"
                                 >
                                     <FaEnvelopeOpenText className="text-xl" />
-                                    <span>Отправить отзыв</span>
+                                    <span>{t('nav.sendFeedback')}</span>
                                 </Link>
 
                                 <button
@@ -277,7 +282,7 @@ function Navbar() {
                                     className="flex items-center space-x-4 text-gray-300 font-medium text-lg hover:text-red-400 p-3 rounded-lg hover:bg-neutral-700 transition"
                                 >
                                     <FaSignOutAlt className="text-xl" />
-                                    <span>Выход</span>
+                                    <span>{t('nav.logout')}</span>
                                 </button>
                             </div>
                         ) : (
@@ -287,14 +292,14 @@ function Navbar() {
                                     className="flex items-center space-x-4 text-gray-300 font-medium text-lg hover:text-blue-400 p-3 rounded-lg hover:bg-neutral-700 transition"
                                     onClick={handleMenuClose}
                                 >
-                                    <FaSignInAlt className="text-xl" /> <span>Вход</span>
+                                    <FaSignInAlt className="text-xl" /> <span>{t('nav.login')}</span>
                                 </Link>
                                 <Link
                                     to="/register"
                                     className="flex items-center space-x-4 text-gray-300 font-medium text-lg hover:text-blue-400 p-3 rounded-lg hover:bg-neutral-700 transition"
                                     onClick={handleMenuClose}
                                 >
-                                    <FaUserPlus className="text-xl" /> <span>Регистрация</span>
+                                    <FaUserPlus className="text-xl" /> <span>{t('nav.register')}</span>
                                 </Link>
                             </div>
                         )}

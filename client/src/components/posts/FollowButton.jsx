@@ -1,5 +1,6 @@
 import React from 'react';
-import { FaSpinner, FaUserPlus, FaUserMinus } from 'react-icons/fa'; // ⭐ Добавлены иконки
+import { FaSpinner, FaUserPlus, FaUserMinus } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 
 function FollowButton({
     authorId,
@@ -9,14 +10,14 @@ function FollowButton({
     isTogglingFollow,
     onToggleFollow
 }) {
-    // Если пользователь не вошел в систему ИЛИ автор поста - не показываем кнопку
+    const { t } = useTranslation();
+
     if (!currentUser || isAuthor) {
         return null;
     }
 
-    const buttonText = isFollowingAuthor ? 'Отписаться' : 'Подписаться';
+    const buttonText = isFollowingAuthor ? t('post.unsubscribe') : t('post.subscribe');
     
-    // ⭐ Динамические стили для тёмной темы
     const baseClasses = `
         ml-3
         px-3 sm:px-4 
@@ -41,14 +42,14 @@ function FollowButton({
         hover:bg-neutral-500 
         hover:text-gray-100
         shadow-neutral-700/50
-    `; // Для "Отписаться" - нейтральный тёмный
+    `;
 
     const unfollowingClasses = `
         bg-blue-600 
         text-white 
         hover:bg-blue-700
         shadow-blue-600/50
-    `; // Для "Подписаться" - яркий синий акцент
+    `;
 
     const dynamicClasses = isFollowingAuthor ? followingClasses : unfollowingClasses;
 
@@ -59,10 +60,8 @@ function FollowButton({
             className={`${baseClasses} ${dynamicClasses}`}
         >
             {isTogglingFollow ? (
-                // Спиннер
                 <FaSpinner className="animate-spin text-lg" />
             ) : (
-                // Текст и иконка
                 <span className="flex items-center gap-2 whitespace-nowrap">
                     {isFollowingAuthor ? (
                         <FaUserMinus className="text-base" />

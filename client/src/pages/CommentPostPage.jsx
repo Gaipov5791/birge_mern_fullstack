@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { getPostById } from '../redux/features/posts/postThunks';
 import { getComments, addComment } from '../redux/features/comments/commentThunks';
 import { reset as resetPosts } from '../redux/features/posts/postSlice';
@@ -10,8 +11,8 @@ import {
 } from '../redux/features/comments/commentSlice';
 
 import CommentForm from '../components/CommentForm';
-import CommentHeader from '../components/comments/CommentsHeader'; // ⭐ НОВЫЙ ИМПОРТ
-import CommentActions from '../components/comments/CommentsActions'; // ⭐ НОВЫЙ ИМПОРТ
+import CommentHeader from '../components/comments/CommentsHeader';
+import CommentActions from '../components/comments/CommentsActions';
 import CommentSkeleton from '../components/comments/CommentSkeleton';
 
 import { toastError } from '../redux/features/notifications/notificationSlice';
@@ -19,6 +20,7 @@ import { FaSpinner } from 'react-icons/fa';
 
 
 function CommentPostPage() {
+    const { t } = useTranslation();
     const { id } = useParams();
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -40,10 +42,8 @@ function CommentPostPage() {
         newlyCreatedCommentId,
     } = useSelector((state) => state.comments);
 
-    // Ref для прокрутки к новому комментарию
     const commentsEndRef = useRef(null);
 
-    // --- ЛОГИКА ЗАГРУЗКИ ДАННЫХ ---
     useEffect(() => {
         if (id) {
             dispatch(getPostById(id));
@@ -55,32 +55,28 @@ function CommentPostPage() {
         };
     }, [id, dispatch]);
 
-    // --- ОБРАБОТКА ОШИБОК ---
     useEffect(() => {
         if (postError) {
-            dispatch(toastError(postMessage || 'Произошла ошибка при загрузке поста.'));
+            dispatch(toastError(postMessage || t('comment.loadPostError')));
             dispatch(resetPosts());
-            navigate('/'); // Перенаправление в случае критической ошибки загрузки поста
+            navigate('/');
         }
-    }, [postError, postMessage, dispatch, navigate]);
+    }, [postError, postMessage, dispatch, navigate, t]);
 
     useEffect(() => {
         if (commentsError) {
-            dispatch(toastError(commentsMessage || 'Произошла ошибка при загрузке комментариев.'));
+            dispatch(toastError(commentsMessage || t('comment.loadCommentsError')));
             dispatch(resetComments());
         }
-    }, [commentsError, commentsMessage, dispatch]);
+    }, [commentsError, commentsMessage, dispatch, t]);
     
-    // --- СКРОЛЛ К НОВОМУ КОММЕНТАРИЮ ---
     useEffect(() => {
         if (newlyCreatedCommentId && commentsEndRef.current) {
-            // Условие для скролла в CommentActions будет использовать этот же ID
             commentsEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
             dispatch(clearNewlyCommentId());
         }
     }, [newlyCreatedCommentId, dispatch]);
 
-    // --- ПРОВЕРКА ЗАГРУЗКИ ---
     if (postLoading) {
         return (
             <CommentSkeleton />
@@ -88,38 +84,33 @@ function CommentPostPage() {
     }
 
     if (!currentPost) {
-        return <h2 className="text-center text-xl mt-10 text-red-500">Пост не найден.</h2>;
+        return <h2 className="text-center text-xl mt-10 text-red-500">{t('post.notFound')}</h2>;
     }
 
-    // --- ОТОБРАЖЕНИЕ КОМПОНЕНТОВ ---
     return (
         <div className='min-h-screen bg-neutral-950 text-gray-100 p-4 sm:p-6 lg:p-8'>
             <div className="container mx-auto p-4 mt-8 max-w-2xl">
                 <Link to="/dashboard" className="text-blue-500 hover:underline mb-4 block">
-                    &larr; Назад к ленте
+                    {t('post.backToFeed')}
                 </Link>
 
-                {/* 1. Блок отображения поста */}
                 <CommentHeader post={currentPost} commentsCount={comments?.length || 0} />
 
-                {/* 2. Форма для добавления комментария */}
                 {currentUser ? (
                     <CommentForm 
                         isPublishing={isPublishing}
-                        // Thunk будет вызван через пропс
                         onSubmit={(text) => dispatch(addComment({ postId: currentPost._id, text }))} 
                     />
                 ) : (
-                    <p className="text-center text-gray-600 mb-4">Войдите, чтобы оставить комментарий.</p>
+                    <p className="text-center text-gray-600 mb-4">{t('comment.loginToComment')}</p>
                 )}
 
-                {/* 3. Список комментариев и действия (удаление/редактирование) */}
-                <h2 className="text-2xl font-bold text-gray-400 mb-4 mt-8">Комментарии</h2>
+                <h2 className="text-2xl font-bold text-gray-400 mb-4 mt-8">{t('comment.sectionTitle')}</h2>
                 
                 <CommentActions 
                     comments={comments} 
                     currentUserId={currentUser?._id}
-                    commentsEndRef={commentsEndRef} // Передаем Ref для скролла
+                    commentsEndRef={commentsEndRef}
                 />
 
             </div>

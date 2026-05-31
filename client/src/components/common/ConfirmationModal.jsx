@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 const ANIMATION_DURATION = 500;
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+    const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(false);
     const [isRendered, setIsRendered] = useState(isOpen);
 
@@ -48,14 +50,14 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
                         onClick={onClose}
                         className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-300 bg-neutral-700 rounded-lg hover:bg-neutral-600 transition duration-200"
                     >
-                        Отмена
+                        {t('common.cancel')}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
                         className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition duration-200"
                     >
-                        Подтвердить
+                        {t('common.confirm')}
                     </button>
                 </div>
             </div>

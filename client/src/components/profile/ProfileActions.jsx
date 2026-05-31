@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify'; 
 import axios from 'axios';
 import { setUserProfile } from '../../redux/features/auth/authSlice';
@@ -9,6 +10,7 @@ import ProfileHeader from '../../components/profile/ProfileHeader'; // Импо�
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function ProfileActions({ userProfile, currentUser }) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const fileInputRef = useRef(null); 
 
@@ -27,13 +29,13 @@ function ProfileActions({ userProfile, currentUser }) {
     // --- ФУНКЦИОНАЛ ПОДПИСКИ/ОТПИСКИ ---
     const handleToggleFollow = useCallback(async () => {
         if (!currentUser || !userProfile) {
-            toast.warn('Сначала войдите в систему.');
+            toast.warn(t('profile.loginFirst'));
             return;
         }
         
         setIsTogglingFollow(true);
         const isFollowing = userProfile.followers.includes(currentUser._id);
-        const action = isFollowing ? 'Отписка' : 'Подписка';
+        const action = isFollowing ? t('profile.followUnsubscribe') : t('profile.followSubscribe');
 
         try {
             const token = localStorage.getItem('token');
@@ -48,16 +50,16 @@ function ProfileActions({ userProfile, currentUser }) {
             
             dispatch(setUserProfile(response.data.updatedUser)); 
             
-            toast.success(`${action} прошла успешно!`);
+            toast.success(t('profile.followSuccess', { action }));
 
         } catch (error) {
-            console.error(`Ошибка при ${action}:`, error);
+            console.error(`Follow error:`, error);
             const errorMessage = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
-            toast.error(`Ошибка: ${errorMessage}`);
+            toast.error(`${t('common.error')}: ${errorMessage}`);
         } finally {
             setIsTogglingFollow(false);
         }
-    }, [currentUser, userProfile, dispatch]);
+    }, [currentUser, userProfile, dispatch, t]);
     
     // --- ФУНКЦИОНАЛ ЗАГРУЗКИ ФОТО ---
 
@@ -88,7 +90,7 @@ function ProfileActions({ userProfile, currentUser }) {
     // Обработчик для загрузки изображения на сервер
     const handleImageUpload = useCallback(async () => {
         if (!selectedImageFile) {
-            toast.warn('Пожалуйста, выберите файл для загрузки.'); 
+            toast.warn(t('profile.selectFile')); 
             return;
         }
 
@@ -96,7 +98,7 @@ function ProfileActions({ userProfile, currentUser }) {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                toast.error('Вы не авторизованы для загрузки изображения.'); 
+                toast.error(t('profile.notAuthorizedUpload')); 
                 return;
             }
 
@@ -114,18 +116,18 @@ function ProfileActions({ userProfile, currentUser }) {
             
             dispatch(setUserProfile(response.data.user)); 
             setSelectedImageFile(null); 
-            toast.success('Фотография профиля успешно обновлена!'); 
+            toast.success(t('profile.photoUpdated'));
 
         } catch (error) {
-            console.error('Ошибка при загрузке фотографии профиля:', error);
+            console.error('Profile photo upload error:', error);
             const errorMessage = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
-            toast.error(`Ошибка при загрузке: ${errorMessage}`); 
+            toast.error(t('profile.uploadError', { error: errorMessage })); 
             // При ошибке возвращаем превью к старому изображению
             setImagePreviewUrl(userProfile?.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png');
         } finally {
             setIsUploadingImage(false); 
         }
-    }, [selectedImageFile, currentUser, dispatch, userProfile]);
+    }, [selectedImageFile, currentUser, dispatch, userProfile, t]);
 
     // Обновляем imagePreviewUrl при изменении userProfile (после успешного сохранения)
     // чтобы ProfileHeader показывал актуальное фото

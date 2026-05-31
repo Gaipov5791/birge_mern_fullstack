@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { removeToast } from '../../redux/features/notifications/notificationSlice';
 import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimes } from 'react-icons/fa';
 
@@ -10,6 +11,7 @@ const ANIMATION_DURATION_MS = 500;
 
 // --- Вспомогательный компонент для одиночного тоста ---
 const Toast = React.memo(({ id, message, type }) => {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const [isMounted, setIsMounted] = React.useState(false); 
     const [isClosing, setIsClosing] = React.useState(false);
@@ -92,7 +94,7 @@ const Toast = React.memo(({ id, message, type }) => {
             <button 
                 onClick={handleClose}
                 className="ml-4 p-1 rounded-full text-gray-400 hover:text-gray-100 transition duration-150"
-                aria-label="Закрыть уведомление"
+                aria-label={t('toast.close')}
             >
                 <FaTimes className="text-sm" />
             </button>

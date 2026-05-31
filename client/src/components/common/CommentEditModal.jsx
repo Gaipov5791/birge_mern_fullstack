@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateComment } from '../../redux/features/comments/commentThunks'; // ⭐ Используем updateComment Thunk
+import { useTranslation } from 'react-i18next';
+import { updateComment } from '../../redux/features/comments/commentThunks';
 import { toastError, toastSuccess } from '../../redux/features/notifications/notificationSlice';
 import { FaSpinner } from 'react-icons/fa';
 import PropTypes from 'prop-types';
@@ -14,6 +15,7 @@ const ANIMATION_DURATION = 500;
  * @param {object} comment - Объект комментария, содержащий _id и text.
  */
 function CommentEditModal({ isOpen, onClose, comment }) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     // ⭐ Используем флаг загрузки из среза комментариев
     const { isCommentOperationLoading } = useSelector(state => state.comments);
@@ -69,12 +71,12 @@ function CommentEditModal({ isOpen, onClose, comment }) {
         try {
             // ⭐ Обновление комментария: используем comment._id и новый текст
             await dispatch(updateComment({ commentId: comment._id, text: editedText })).unwrap();
-            dispatch(toastSuccess('Комментарий успешно обновлен!'));
+            dispatch(toastSuccess(t('comment.updated')));
         } catch (error) {
-            const errorMessage = error.payload?.message || error.message || 'Произошла ошибка.';
-            dispatch(toastError(`Не удалось обновить комментарий: ${errorMessage}`));
+            const errorMessage = error.payload?.message || error.message || t('comment.genericError');
+            dispatch(toastError(t('comment.updateFailed', { error: errorMessage })));
         }
-    }, [editedText, comment, dispatch, isCommentOperationLoading, onClose]);
+    }, [editedText, comment, dispatch, isCommentOperationLoading, onClose, t]);
 
 
     if (!isRendered || !comment) return null; // Фактический демонтаж
@@ -97,7 +99,7 @@ function CommentEditModal({ isOpen, onClose, comment }) {
             >
                 <div className="p-6">
                     <h2 className="text-xl font-bold text-gray-100 mb-4 border-b border-neutral-700 pb-2">
-                        Редактировать комментарий
+                        {t('comment.editTitle')}
                     </h2>
 
                     <textarea
@@ -109,7 +111,7 @@ function CommentEditModal({ isOpen, onClose, comment }) {
                         "
                         value={editedText}
                         onChange={(e) => setEditedText(e.target.value)}
-                        placeholder="Ваш обновленный комментарий..."
+                        placeholder={t('comment.editPlaceholder')}
                         disabled={isCommentOperationLoading}
                     />
                 </div>
@@ -122,7 +124,7 @@ function CommentEditModal({ isOpen, onClose, comment }) {
                         className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-300 bg-neutral-700 rounded-lg hover:bg-neutral-600 transition duration-200"
                         disabled={isCommentOperationLoading}
                     >
-                        Отмена
+                        {t('common.cancel')}
                     </button>
                     <button
                         type="button"
@@ -137,10 +139,10 @@ function CommentEditModal({ isOpen, onClose, comment }) {
                         {isCommentOperationLoading ? (
                             <>
                                 <FaSpinner className="animate-spin mr-2" />
-                                Сохранение...
+                                {t('common.saving')}
                             </>
                         ) : (
-                            'Сохранить изменения'
+                            t('post.saveChanges')
                         )}
                     </button>
                 </div>

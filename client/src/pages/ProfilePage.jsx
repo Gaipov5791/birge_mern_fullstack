@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
     reset as resetAuthSlice,
     setUserProfile,
@@ -17,6 +18,7 @@ import { toastError, toastSuccess } from '../redux/features/notifications/notifi
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function ProfilePage() {
+    const { t } = useTranslation();
     const { id } = useParams();
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -40,7 +42,7 @@ function ProfilePage() {
 
     const handleSaveProfile = useCallback(async () => {
         if (!editedBio.trim()) {
-            dispatch(toastError('Пожалуйста, введите текст био.'));
+            dispatch(toastError(t('profile.bioRequired')));
             return;
         }
 
@@ -48,7 +50,7 @@ function ProfilePage() {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                dispatch(toastError('Вы не авторизованы для сохранения профиля.'));
+                dispatch(toastError(t('profile.notAuthorized')));
                 return;
             }
 
@@ -62,15 +64,15 @@ function ProfilePage() {
             const response = await axios.put(`${API_BASE_URL}/users/profile`, { bio: editedBio }, config);
 
             dispatch(setUserProfile(response.data.user));
-            dispatch(toastSuccess('Профиль успешно обновлен!'));
+            dispatch(toastSuccess(t('profile.updated')));
         } catch (error) {
             console.error('Ошибка при сохранении профиля:', error);
             const errorMessage = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
-            dispatch(toastError(`Ошибка при сохранении профиля: ${errorMessage}`));
+            dispatch(toastError(t('profile.saveError', { error: errorMessage })));
         } finally {
             setIsSavingProfile(false);
         }
-    }, [editedBio, dispatch]);
+    }, [editedBio, dispatch, t]);
 
     const handleCancelEdit = useCallback(() => {
         setEditedBio(userProfile.bio || '');
@@ -104,17 +106,17 @@ function ProfilePage() {
 
                     dispatch(setUserProfile(null));
                     if (errorMessage.includes("Пользователь не найден")) {
-                        dispatch(toastError('Профиль не найден.'));
+                        dispatch(toastError(t('profile.notFound')));
                         navigate('/');
                     } else {
-                        dispatch(toastError(`Ошибка при загрузке профиля: ${errorMessage}`));
+                        dispatch(toastError(t('profile.loadError', { error: errorMessage })));
                     }
                 } finally {
                     setProfileLoading(false);
                 }
             } else {
                 setProfileLoading(false);
-                dispatch(toastError('Для просмотра собственного профиля необходимо войти.'));
+                dispatch(toastError(t('profile.loginRequired')));
                 navigate('/login');
             }
         };
@@ -125,7 +127,7 @@ function ProfilePage() {
             dispatch(setUserProfile(null));
             dispatch(resetAuthSlice());
         };
-    }, [targetUserId, dispatch, navigate]);
+    }, [targetUserId, dispatch, navigate, t]);
 
     const isCurrentUserProfile = currentUser && String(currentUser._id) === String(userProfile?._id);
 
@@ -136,7 +138,7 @@ function ProfilePage() {
     }
 
     if (profileError || !userProfile) {
-        return <h2 className="text-center text-xl mt-10 text-red-400">Ошибка: {profileError || "Профиль не найден."}</h2>;
+        return <h2 className="text-center text-xl mt-10 text-red-400">{t('common.error')}: {profileError || t('profile.notFound')}</h2>;
     }
 
     return (

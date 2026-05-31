@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { getPosts, deletePost } from '../redux/features/posts/postThunks';
 
-import { logoutUser as logoutUserThunk } from '../redux/features/auth/authThunks'; // ⭐ Импортируем thunk для выхода
-import { reset as resetAuth } from '../redux/features/auth/authSlice'; // ⭐ Импортируем редьюсер для сброса auth состояния
+import { logoutUser as logoutUserThunk } from '../redux/features/auth/authThunks';
+import { reset as resetAuth } from '../redux/features/auth/authSlice';
 import Sidebar from '../components/common/Sidebar';
 import RightSidebar from '../components/common/RightSidebar';
 
 import { 
-    reset,
-    // ⭐ Импортируем редьюсеры для управления модальными окнами
-    clearPostIdToDelete,
+    reset,
+    clearPostIdToDelete,
     clearPostIdToEdit,
     clearNewlyCreatedPostId,
 } from '../redux/features/posts/postSlice'; 
@@ -20,7 +20,6 @@ import PostForm from '../components/PostForm';
 import PostItem from '../components/PostItem';
 import LoadingModal from '../components/common/LoadingModal'; 
 import ConfirmationModal from '../components/common/ConfirmationModal';
-// ⭐ НОВЫЙ ИМПОРТ: Предполагаем, что у вас есть компонент для редактирования поста
 import PostEditModal from '../components/common/PostEditModal'; 
 import PostSkeleton from '../components/posts/PostSkeleton';
 
@@ -28,55 +27,49 @@ import { FaSpinner, FaCloudShowersHeavy } from 'react-icons/fa';
 import { toastSuccess, toastError } from '../redux/features/notifications/notificationSlice';
 
 function DashboardPage() {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+    const { t } = useTranslation();
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    const { user } = useSelector((state) => state.auth);
-    const { 
-        timelinePosts, 
-        isLoading, 
-        isError, 
+    const { user } = useSelector((state) => state.auth);
+    const { 
+        timelinePosts, 
+        isLoading, 
+        isError, 
         message, 
         nextCursor,
         isLoadingMore,
-        isPostOperationLoading,
-        // ⭐ ИЗМЕНЕНИЯ: Извлекаем новые состояния для модальных окон
+        isPostOperationLoading,
         postIdToDelete,
         postIdToEdit,
         newlyCreatedPostId,
-    } = useSelector(
-        (state) => state.posts
-    );
+    } = useSelector(
+        (state) => state.posts
+    );
 
     const postRefs = useRef({});
     const loadMoreRef = useRef(null);
     const hasFetchedPostsRef = useRef(false);
 
-    // ⭐ ЛОКАЛЬНЫЙ onLogout для передачи в Sidebar (Позже можно вынести выше)
     const onLogout = useCallback(() => {
         dispatch(logoutUserThunk());
         dispatch(resetAuth());
         navigate("/login");
     }, [dispatch, navigate]);
 
-    // ⭐ СКРОЛЛ: Прокручиваем к новому посту, если он был только что создан
     useEffect(() => {
         if (newlyCreatedPostId && postRefs.current[newlyCreatedPostId]) {
             postRefs.current[newlyCreatedPostId].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Очищаем ID после прокрутки, чтобы не прокручивало снова
             dispatch(clearNewlyCreatedPostId());
         }
     }, [newlyCreatedPostId, dispatch]);
 
-    // ⭐ ЛОГ: Отслеживаем изменение флага загрузки операций
     useEffect(() => {
 
     }, [isPostOperationLoading]);
 
-    // ⭐ ИЗМЕНЕНИЯ: Определяем, какой пост редактируется/удаляется
     const postToEdit = timelinePosts.find(p => p._id === postIdToEdit);
-    // Определяем сообщение для LoadingModal (если оно было установлено в pending-редюсере)
-    const loadingMessage = isPostOperationLoading ? message : "Загрузка...";
+    const loadingMessage = isPostOperationLoading ? message : t('common.loading');
 
 
     const handleLoadMore = useCallback(() => {
@@ -119,88 +112,73 @@ function DashboardPage() {
         };
     }, [dispatch, userId]);
 
-    // ⭐ 2. useEffect для обработки ошибок
-    useEffect(() => {
-        if (isError) {
-            dispatch(toastError(message));
-            // Если ошибка произошла в модалке, закрываем ее.
+    useEffect(() => {
+        if (isError) {
+            dispatch(toastError(message));
             dispatch(clearPostIdToDelete());
             dispatch(clearPostIdToEdit());
-        }
-    }, [isError, message, dispatch]);
+        }
+    }, [isError, message, dispatch]);
 
     
-    // --- ХЕНДЛЕРЫ ДЛЯ МОДАЛЬНЫХ ОКОН ---
-
-    // ⭐ Хендлер для закрытия обоих модальных окон (редактирования и удаления)
     const handleCloseModals = () => {
         dispatch(clearPostIdToDelete());
         dispatch(clearPostIdToEdit());
     };
 
-    // ⭐ Хендлер для подтверждения удаления
     const handleDeleteConfirm = () => {
         if (postIdToDelete) {
 
             handleCloseModals();
 
-            dispatch(deletePost(postIdToDelete)) // Вызываем thunk
+            dispatch(deletePost(postIdToDelete))
                 .unwrap()
                 .then(() => {
-                    dispatch(toastSuccess('Пост успешно удален!'));
+                    dispatch(toastSuccess(t('dashboard.postDeleted')));
                      
                 })
                 .catch((error) => {
-                    // Ошибка будет обработана в общем useEffect, но можем добавить тут
-                    dispatch(toastError(`Ошибка удаления: ${error}`));
+                    dispatch(toastError(t('dashboard.deleteError', { error })));
                     handleCloseModals();
                 });
         }
     };
     
-    //⭐ 1. Обработка состояния загрузки на весь экран
-    if (isLoading) {
-        return (
-            <PostSkeleton />
-        );
-    }
-    
-    // ⭐ 2. Вывод сообщения об ошибке
-    if (isError && !isPostOperationLoading) { // Убедимся, что не показываем ошибку, пока идёт операция
-        return (
-            <div className='min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-8'>
-                <FaCloudShowersHeavy className='text-6xl text-red-500 mb-4' />
-                <h1 className='text-2xl text-gray-100 bg-neutral-800 p-6 rounded-xl shadow-xl border border-red-500'>
-                    Ошибка загрузки: <span className="font-light text-red-400">{message || 'Не удалось загрузить ленту.'}</span>
-                </h1>
-            </div>
-        );
-    }
+    if (isLoading) {
+        return (
+            <PostSkeleton />
+        );
+    }
+    
+    if (isError && !isPostOperationLoading) {
+        return (
+            <div className='min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-8'>
+                <FaCloudShowersHeavy className='text-6xl text-red-500 mb-4' />
+                <h1 className='text-2xl text-gray-100 bg-neutral-800 p-6 rounded-xl shadow-xl border border-red-500'>
+                    {t('common.error')}: <span className="font-light text-red-400">{message || t('dashboard.loadError')}</span>
+                </h1>
+            </div>
+        );
+    }
 
-    return (
-        <div className="min-h-screen bg-neutral-950 text-gray-100 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto flex">
+    return (
+        <div className="min-h-screen bg-neutral-950 text-gray-100 p-4 sm:p-6 lg:p-8">
+            <div className="max-w-7xl mx-auto flex">
 
-                {/* 1. ЛЕВАЯ КОЛОНКА: Sidebar */}
-                {/* w-72: Фиксированная ширина для Sidebar.
-                    hidden lg:block: Скрываем на мобильных, показываем на больших экранах.
-                */}
                 <div className="hidden lg:block w-72 flex-shrink-0">
                     <Sidebar onLogout={onLogout} />
                 </div>
 
-                {/* 2. ЦЕНТРАЛЬНАЯ КОЛОНКА: Лента Постов */}
                 <main className="flex-grow min-w-0 overflow-hidden mx-auto lg:mx-8"> 
                     
                     <h1 className='mt-5 text-xl sm:text-3xl font-extrabold text-center mb-10 text-gray-100 uppercase tracking-wider'>
-                        Ваша <span className="text-blue-400">Лента</span> Новостей
+                        <Trans i18nKey="dashboard.title" components={{ 1: <span className="text-blue-400" /> }} />
                     </h1>
 
                     {user && <PostForm />}
                     
                     {timelinePosts && timelinePosts.length > 0 ? (
                         <div className='posts-container mt-8 space-y-6'>
-                            {/* ... (рендеринг PostItem - БЕЗ ИЗМЕНЕНИЙ) ... */}
                             {timelinePosts.map((post) => (
                                 <div 
                                     key={post._id}
@@ -219,7 +197,7 @@ function DashboardPage() {
                                             onClick={handleLoadMore}
                                             className="px-6 py-2 bg-neutral-800 border border-neutral-700 rounded-full text-gray-300 hover:text-blue-400 hover:border-blue-600 transition-colors"
                                         >
-                                            Показать ещё
+                                            {t('common.showMore')}
                                         </button>
                                     ) : null}
                                 </div>
@@ -228,51 +206,39 @@ function DashboardPage() {
                     ) : (
                         user && !isLoading && (
                             <h3 className='text-center text-xl text-gray-500 p-10 border border-neutral-800 bg-neutral-800 rounded-xl mt-8 shadow-inner shadow-neutral-900/50'>
-                                Нет постов в вашей ленте. Подпишитесь на других пользователей или создайте свой первый пост!
+                                {t('dashboard.emptyFeed')}
                             </h3>
                         )
                     )}
 
                 </main>
 
-                {/* 3. ПРАВАЯ КОЛОНКА: Для будущих виджетов (сейчас просто пустое место) */}
-                {/* w-72: Та же ширина, что и у левой панели, для симметрии
-                    hidden lg:block: Скрываем на мобильных, показываем на больших экранах.
-                */}
                 <div className="hidden lg:block w-72 flex-shrink-0">
                     <RightSidebar />
                 </div>
-            </div>
+            </div>
             
-            {/* -------------------- МОДАЛЬНЫЕ ОКНА ДЛЯ ПОСТОВ -------------------- */}
+            <LoadingModal 
+                isOpen={isPostOperationLoading} 
+                message={loadingMessage}
+            />
 
-            {/* 1. Модальное окно загрузки для операций обновления/удаления */}
-            <LoadingModal 
-                isOpen={isPostOperationLoading} 
-                message={loadingMessage}
-            />
+            <ConfirmationModal
+                isOpen={!!postIdToDelete}
+                onClose={handleCloseModals}
+                onConfirm={handleDeleteConfirm}
+                title={t('dashboard.deletePostTitle')}
+                message={t('dashboard.deletePostMessage')}
+            />
 
-            {/* 2. Модальное окно подтверждения удаления */}
-            <ConfirmationModal
-                // ⭐ Активируем, если в Redux есть ID поста для удаления
-                isOpen={!!postIdToDelete}
-                onClose={handleCloseModals} // Используем общий хендлер для закрытия
-                onConfirm={handleDeleteConfirm} // Хендлер для выполнения Thunk
-                title="Подтвердите удаление поста"
-                // Сообщение теперь о посте, а не о комментарии
-                message="Вы уверены, что хотите безвозвратно удалить этот пост? Это действие нельзя отменить."
-            />
-
-            {/* 3. Модальное окно редактирования поста */}
-            {/* Активируем, если в Redux есть ID поста для редактирования */}
             <PostEditModal
                 isOpen={!!postIdToEdit}
                 onClose={handleCloseModals}
-                post={postToEdit} // Передаем найденный объект поста
+                post={postToEdit}
             />
             
-        </div>
-    );
+        </div>
+    );
 }
 
 export default DashboardPage;

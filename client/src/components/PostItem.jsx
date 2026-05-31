@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { 
     updateSinglePostInState,
     setPostIdToDelete, 
@@ -15,7 +16,8 @@ import PostContent from './posts/PostContent';
 import PostActions from './posts/PostActions';
 
 function PostItem({ post, variant = "compact" }) {
-    const dispatch = useDispatch();
+    const { t } = useTranslation();
+    const dispatch = useDispatch();
     const { user: currentUser } = useSelector((state) => state.auth);
 
     // ⭐ НОВОЕ СОСТОЯНИЕ ДЛЯ АНИМАЦИИ
@@ -48,7 +50,7 @@ function PostItem({ post, variant = "compact" }) {
     const handleFollowToggle = useCallback(async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        if (!currentUser) return dispatch(toastInfo('Пожалуйста, войдите, чтобы подписаться.'));
+        if (!currentUser) return dispatch(toastInfo(t('post.loginToFollow')));
 
         if (isTogglingFollow) return;
         setIsTogglingFollow(true);
@@ -56,17 +58,17 @@ function PostItem({ post, variant = "compact" }) {
         try {
             if (isFollowingAuthor) {
                 await dispatch(unfollowUser(authorId)).unwrap();
-                dispatch(toastSuccess('Вы отписались от автора.')); // ✅ Исправлено
-            } else {
-                await dispatch(followUser(authorId)).unwrap();
-                dispatch(toastSuccess('Вы подписались на автора.'));
-            }
-        } catch {
-            dispatch(toastError('Ошибка при подписке/отписке.'));
-        } finally {
-            setIsTogglingFollow(false);
-        }
-    }, [currentUser, isFollowingAuthor, authorId, dispatch, isTogglingFollow]);
+                dispatch(toastSuccess(t('post.unfollowed')));
+            } else {
+                await dispatch(followUser(authorId)).unwrap();
+                dispatch(toastSuccess(t('post.followed')));
+            }
+        } catch {
+            dispatch(toastError(t('post.followError')));
+        } finally {
+            setIsTogglingFollow(false);
+        }
+    }, [currentUser, isFollowingAuthor, authorId, dispatch, isTogglingFollow, t]);
 
     const handleLike = useCallback((e) => {
         if (e) {
@@ -75,7 +77,7 @@ function PostItem({ post, variant = "compact" }) {
         }
 
         if (!currentUser) {
-            dispatch(toastInfo('Войдите, чтобы поставить лайк.'));
+            dispatch(toastInfo(t('post.loginToLike')));
             return;
         }
 
@@ -92,21 +94,21 @@ function PostItem({ post, variant = "compact" }) {
         // Отправляем асинхронный запрос на сервер
         dispatch(likePost(post._id)).then((result) => {
             if (result.meta.requestStatus === 'rejected') {
-                dispatch(toastError(result.payload || 'Не удалось обновить лайк.'));
+                dispatch(toastError(result.payload || t('post.likeFailed')));
                 dispatch(updateSinglePostInState(post)); 
             }
         });
-    }, [currentUser, dispatch, post, isLiked]);
+    }, [currentUser, dispatch, post, isLiked, t]);
 
     // ⭐ ХЕНДЛЕР УДАЛЕНИЯ: Только диспатч в Redux
     const handleDeleteConfirmStart = useCallback(() => {
-        if (!currentUser) return dispatch(toastInfo('Войдите, чтобы удалить пост.'));
+        if (!currentUser) return dispatch(toastInfo(t('post.loginToDelete')));
         dispatch(setPostIdToDelete(post._id));
     }, [currentUser, dispatch, post._id]);
 
     // ⭐ ХЕНДЛЕР РЕДАКТИРОВАНИЯ: Только диспатч в Redux
     const handleEditClick = useCallback(() => {
-        if (!currentUser) return dispatch(toastInfo('Войдите, чтобы редактировать.'));
+        if (!currentUser) return dispatch(toastInfo(t('post.loginToEdit')));
         dispatch(setPostIdToEdit(post._id));
     }, [currentUser, dispatch, post._id]);
 

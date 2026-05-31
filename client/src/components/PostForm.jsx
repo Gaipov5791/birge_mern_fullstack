@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { createPost } from '../redux/features/posts/postThunks'; // Ваш реальный thunk
+import { useTranslation } from 'react-i18next';
+import { createPost } from '../redux/features/posts/postThunks';
 import { FaPaperPlane, FaPlus, FaTimes, FaSpinner } from 'react-icons/fa'; // Ваши реальные иконки
 import { toastSuccess, toastError, toastInfo } from '../redux/features/notifications/notificationSlice'; // Ваши реальные toast actions
 
@@ -8,6 +9,7 @@ import { toastSuccess, toastError, toastInfo } from '../redux/features/notificat
 const MAX_FILES = 5;
 
 function PostForm() {
+    const { t } = useTranslation();
     const [newPostText, setNewPostText] = useState('');
     // ⭐ Только массивное состояние для файлов
     const [selectedFiles, setSelectedFiles] = useState([]); 
@@ -46,7 +48,7 @@ function PostForm() {
         const totalFilesCount = selectedFiles.length + validFiles.length;
         
         if (totalFilesCount > MAX_FILES) {
-            dispatch(toastError(`Вы можете выбрать не более ${MAX_FILES} файлов.`));
+            dispatch(toastError(t('post.maxFiles', { max: MAX_FILES })));
             const availableSpace = MAX_FILES - selectedFiles.length;
             setSelectedFiles(prev => [...prev, ...validFiles.slice(0, availableSpace)]);
         } else {
@@ -54,12 +56,12 @@ function PostForm() {
         }
         
         if (validFiles.length < newFiles.length) {
-             dispatch(toastError('Некоторые выбранные файлы имеют неподдерживаемый формат.'));
+             dispatch(toastError(t('post.unsupportedFormat')));
         }
         
         e.target.value = null; 
 
-    }, [dispatch, selectedFiles.length]);
+    }, [dispatch, selectedFiles.length, t]);
 
     // ⭐ ИЗМЕНЕНИЕ: Удаление файла по индексу
     const handleRemoveFile = useCallback((indexToRemove) => {
@@ -75,13 +77,13 @@ function PostForm() {
         e.preventDefault();
 
         if (!user) {
-            dispatch(toastError('Пожалуйста, войдите, чтобы создать пост.'));
+            dispatch(toastError(t('post.loginToCreate')));
             return;
         }
 
         // Проверяем selectedFiles
         if (!newPostText.trim() && selectedFiles.length === 0) {
-            dispatch(toastInfo('Пожалуйста, введите текст или выберите файл(ы) для поста.'));
+            dispatch(toastInfo(t('post.textOrFileRequired')));
             return;
         }
 
@@ -99,7 +101,7 @@ function PostForm() {
         try {
             // Ваш реальный Redux thunk
             await dispatch(createPost(formData)).unwrap();
-            dispatch(toastSuccess("Пост успешно опубликован!"));
+            dispatch(toastSuccess(t('post.published')));
             
             // Сброс состояния формы после успешной публикации
             setNewPostText('');
@@ -108,10 +110,10 @@ function PostForm() {
 
         } catch (error) {
             // Предполагается, что error - это строка или объект с полем message
-            const errorMessage = error.message || error.toString() || "Не удалось опубликовать пост.";
+            const errorMessage = error.message || error.toString() || t('post.publishFailed');
             dispatch(toastError(errorMessage));
         }
-    }, [newPostText, selectedFiles, user, dispatch]);
+    }, [newPostText, selectedFiles, user, dispatch, t]);
 
 
     if (!user) {
@@ -124,7 +126,7 @@ function PostForm() {
     return (
         <div className="w-full max-w-4xl mx-auto bg-neutral-800 p-4 sm:p-6 rounded-xl shadow-2xl shadow-blue-900/50 border border-neutral-700 mb-8 hover:border-blue-600 transform transition-all duration-700 ease-out">
             <h3 className="text-xl sm:text-2xl font-bold text-gray-100 mb-6 text-center">
-                Что нового?
+                {t('post.whatsNew')}
             </h3>
             <form onSubmit={handleSubmit}>
                 <textarea
@@ -134,7 +136,7 @@ function PostForm() {
                         focus:border-blue-500 mb-4 text-sm sm:text-base transition duration-200 resize-none
                     "
                     rows="4"
-                    placeholder="Что у вас нового? (Совет: используйте #хештеги, чтобы сделать ваш пост заметнее!)"
+                    placeholder={t('post.placeholder')}
                     value={newPostText}
                     onChange={(e) => setNewPostText(e.target.value)}
                     disabled={isPosting}
@@ -148,7 +150,7 @@ function PostForm() {
                                 {preview.type.startsWith('image/') ? (
                                     <img 
                                         src={preview.url} 
-                                        alt={`Превью ${index + 1}`} 
+                                        alt={t('post.preview', { n: index + 1 })} 
                                         className="w-full h-full object-cover" 
                                     />
                                 ) : (
@@ -161,7 +163,7 @@ function PostForm() {
                                 <button
                                     type="button"
                                     onClick={() => handleRemoveFile(index)}
-                                    title="Удалить файл"
+                                    title={t('post.removeFile')}
                                     className="absolute top-1 right-1 bg-red-600/90 text-white rounded-full p-1 
                                             hover:bg-red-700 transition-all shadow-lg text-xs z-10"
                                 >
@@ -188,12 +190,12 @@ function PostForm() {
                         {isPosting ? (
                             <>
                                 <FaSpinner className="animate-spin mr-3 text-sm sm:text-lg" />
-                                <span>Публикация...</span>
+                                <span>{t('post.publishing')}</span>
                             </>
                         ) : (
                             <>
                                 <FaPaperPlane className="mr-3 text-md sm:text-lg" />
-                                <span className='text-sm sm:text-base'>Опубликовать</span>
+                                <span className='text-sm sm:text-base'>{t('post.publish')}</span>
                             </>
                         )}
                     </button>
@@ -217,7 +219,7 @@ function PostForm() {
                 </div>
                 {selectedFiles.length > 0 && (
                      <p className='text-xs text-gray-400 mt-2 text-right'>
-                        Добавлено {selectedFiles.length} из {MAX_FILES} файлов.
+                        {t('post.filesAdded', { count: selectedFiles.length, max: MAX_FILES })}
                      </p>
                 )}
             </form>

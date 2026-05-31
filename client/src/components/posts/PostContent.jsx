@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-// ⭐ Импорт компонентов Swiper и необходимых модулей
+import { useTranslation } from 'react-i18next';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 
@@ -11,9 +11,8 @@ import 'swiper/css/pagination';
 import { FaPlay } from 'react-icons/fa'; // FaPlay нужен для видео
 import MediaModal from '../../components/MediaModel';
 
-// Встроенный плейсхолдер
-const IMAGE_FALLBACK_DATA =
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%231f2937'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui' font-size='24' fill='%239ca3af'>Image not found</text></svg>"; 
+const getImageFallbackData = (label) =>
+    `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%231f2937'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui' font-size='24' fill='%239ca3af'>${encodeURIComponent(label)}</text></svg>`;
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -85,7 +84,9 @@ const parsePostText = (text) => {
 
 
 function PostContent({ post }) {
+    const { t } = useTranslation();
     const [modalData, setModalData] = useState({ url: null, type: null });
+    const imageFallbackData = useMemo(() => getImageFallbackData(t('common.imageNotFound')), [t]);
 
     // ⭐ НОВОЕ СОСТОЯНИЕ: Для управления видимостью полного текста
     const [isExpanded, setIsExpanded] = useState(false);
@@ -157,12 +158,12 @@ function PostContent({ post }) {
                         onClick={toggleExpand}
                         className="text-blue-400 hover:underline text-sm font-semibold mt-1 inline-block"
                     >
-                        {isExpanded ? 'свернуть' : 'читать далее'}
+                        {isExpanded ? t('post.collapse') : t('post.readMore')}
                     </button>
                 )}
             </>
         );
-    }, [post.text, isExpanded, toggleExpand]); // Зависит от текста и состояния
+    }, [post.text, isExpanded, toggleExpand, t]);
 
 
     // ⭐ 2. Компонент для рендеринга ОДНОГО слайда
@@ -186,11 +187,11 @@ function PostContent({ post }) {
                 >
                     <img
                         src={fullUrl}
-                        alt="Изображение поста"
+                        alt={t('post.postImage')}
                         className={`block ${mediaClass}`}
                         onError={(e) => {
                             e.currentTarget.onerror = null;
-                            e.currentTarget.src = IMAGE_FALLBACK_DATA;
+                            e.currentTarget.src = imageFallbackData;
                         }}
                     />
                 </div>
@@ -221,7 +222,7 @@ function PostContent({ post }) {
             );
         }
         return null;
-    }, [openMediaModal]); // Зависит от openMediaModal
+    }, [openMediaModal, t, imageFallbackData]);
 
     // Если медиа нет, рендерим только текст
     if (mediaItems.length === 0) {

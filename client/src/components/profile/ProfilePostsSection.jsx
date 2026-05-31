@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import PostItem from '../PostItem'; 
 import ConfirmationModal from '../common/ConfirmationModal';
 import PostEditModal from '../common/PostEditModal'; // Предполагаемый путь
@@ -11,6 +12,7 @@ import { FaSpinner } from 'react-icons/fa'; // Для спиннера в мод
 
 // Принимаем userPosts в качестве пропса, но нам нужен current user ID для проверки прав
 function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPostsError }) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const { user: currentUser } = useSelector((state) => state.auth);
 
@@ -37,10 +39,10 @@ function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPos
         if (postId) {
             dispatch(deletePost(postId))
                 .unwrap()
-                .then(() => dispatch(toastSuccess('Пост успешно удален!')))
-                .catch((error) => dispatch(toastError(`Ошибка при удалении: ${error.payload || error.message}`)));
-        }
-    }, [dispatch, postIdToDelete, handleDeleteConfirmClose]);
+                .then(() => dispatch(toastSuccess(t('dashboard.postDeleted'))))
+                .catch((error) => dispatch(toastError(t('dashboard.deleteError', { error: error.payload || error.message }))));
+        }
+    }, [dispatch, postIdToDelete, handleDeleteConfirmClose, t]);
 
 
     // --- ЛОГИКА РЕДАКТИРОВАНИЯ ПОСТА ---
@@ -56,44 +58,44 @@ function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPos
 
         
         if (!postToEdit) {
-            dispatch(toastError('Невозможно найти пост для обновления.'));
+            dispatch(toastError(t('profile.postNotFoundForUpdate')));
             return;
         }
-        
-        if (!updateData.text?.trim()) {
-            dispatch(toastError('Поле "Текст" не может быть пустым.'));
-            return;
-        }
+        
+        if (!updateData.text?.trim()) {
+            dispatch(toastError(t('profile.textRequired')));
+            return;
+        }
 
-        try {
-            await dispatch(updatePost({ 
-                postId: postToEdit._id, // ✅ ID теперь гарантированно существует
-                updateData: updateData 
-            })).unwrap();
-            
-            dispatch(toastSuccess('Пост успешно обновлен!'));
-            handleEditClose(); 
-        } catch (error) {
-            const errorMessage = error.payload?.message || error.message || 'Ошибка при обновлении поста.';
-            dispatch(toastError(`Ошибка: ${errorMessage}`));
-        }
-    }, [dispatch, postToEdit, handleEditClose]); // ⭐ Добавляем postToEdit в зависимости useCallback
+        try {
+            await dispatch(updatePost({ 
+                postId: postToEdit._id,
+                updateData: updateData 
+            })).unwrap();
+            
+            dispatch(toastSuccess(t('post.updated')));
+            handleEditClose(); 
+        } catch (error) {
+            const errorMessage = error.payload?.message || error.message || t('comment.genericError');
+            dispatch(toastError(t('post.updateFailed', { error: errorMessage })));
+        }
+    }, [dispatch, postToEdit, handleEditClose, t]);
 
 
     return (
         <div className="bg-neutral-950 rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold text-gray-400 mb-4 text-center">
-                Посты {userProfile.username}
+                {t('profile.postsOf', { username: userProfile.username })}
             </h2>
 
             {userPostsLoading ? (
                 <p className="text-center text-lg text-blue-400">
-                    <FaSpinner className='animate-spin inline mr-2' /> Загрузка постов...
+                    <FaSpinner className='animate-spin inline mr-2' /> {t('profile.loadingPosts')}
                 </p>
             ) : userPostsError ? (
-                <p className="text-center text-red-500 text-lg">Ошибка при загрузке постов: {userPostsError}</p>
+                <p className="text-center text-red-500 text-lg">{t('profile.postsLoadError', { error: userPostsError })}</p>
             ) : Array.isArray(userPosts) && userPosts.length === 0 ? (
-                <p className="text-center text-lg text-gray-600">У пользователя пока нет постов.</p>
+                <p className="text-center text-lg text-gray-600">{t('profile.noPosts')}</p>
             ) : (
                 <div className="space-y-6">
                     {Array.isArray(userPosts) && userPosts.map((post) => (
@@ -111,21 +113,21 @@ function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPos
                 isOpen={!!postIdToDelete}
                 onClose={handleDeleteConfirmClose}
                 onConfirm={handleDeleteConfirm}
-                title="Подтвердите удаление поста"
-                message="Вы уверены, что хотите безвозвратно удалить этот пост? Это действие нельзя отменить."
+                title={t('dashboard.deletePostTitle')}
+                message={t('dashboard.deletePostMessage')}
             />
 
             <PostEditModal
                 isOpen={!!postIdToEdit}
                 onClose={handleEditClose}
                 onSave={handleUpdatePost}
-                post={postToEdit} // Находим пост по ID
-                isSaving={isPostOperationLoading} // Передаем состояние загрузки в модалку
+                post={postToEdit}
+                isSaving={isPostOperationLoading}
             />
 
             <LoadingModal
                 isOpen={isPostOperationLoading}
-                message="Обновление поста..."
+                message={t('profile.updatingPost')}
             />
         </div>
     );

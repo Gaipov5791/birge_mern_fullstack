@@ -1,5 +1,5 @@
 import React from 'react';
-// Импорт FaSave, FaTimes, FaSpinner заменены на встроенные SVG-компоненты для однофайлового режима.
+import { useTranslation } from 'react-i18next';
 
 // --- Встроенные компоненты иконок ---
 const IconSave = (props) => (
@@ -32,15 +32,15 @@ function ProfileBio({
     handleSaveProfile, 
     handleCancelEdit 
 }) {
-    // Временно пропустим проверку загрузки данных, так как вы запросили только редизайн.
-    const bioText = userProfile?.bio || "Пользователь пока ничего не написал о себе.";
+    const { t } = useTranslation();
+    const bioText = userProfile?.bio || t('profile.defaultBio');
 
     return (
         // ⭐ РЕДИЗАЙН: Тёмный контейнер с акцентной нижней границей и тенью
         <div className="bg-neutral-800 rounded-3xl shadow-xl shadow-neutral-900/50 p-6 mb-8 border-b-4 border-indigo-600">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-6 border-b border-neutral-700 pb-3">
                 <span className="text-indigo-400 mr-2">/</span>
-                Биография
+                {t('profile.biography')}
             </h2>
             {isCurrentUserProfile ? (
                 <div className="mb-4">
@@ -55,7 +55,7 @@ function ProfileBio({
                         rows="5"
                         value={editedBio}
                         onChange={(e) => setEditedBio(e.target.value)}
-                        placeholder="Напишите что-нибудь о себе..."
+                        placeholder={t('profile.bioPlaceholder')}
                         disabled={isSavingProfile}
                     ></textarea>
                     <div className="flex flex-col sm:flex-row justify-end sm:space-x-3 space-y-2 sm:space-y-0 mt-4">
@@ -78,7 +78,7 @@ function ProfileBio({
                             ) : (
                                 <IconSave className="mr-2 w-4 h-4" />
                             )}
-                            {isSavingProfile ? 'Сохранение...' : 'Сохранить'}
+                            {isSavingProfile ? t('common.saving') : t('common.save')}
                         </button>
                         <button
                             onClick={handleCancelEdit} 
@@ -94,7 +94,7 @@ function ProfileBio({
                             "
                             disabled={isSavingProfile}
                         >
-                            <IconTimes className="mr-2 w-4 h-4" /> Отмена
+                            <IconTimes className="mr-2 w-4 h-4" /> {t('common.cancel')}
                         </button>
                     </div>
                 </div>
