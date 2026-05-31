@@ -41,10 +41,13 @@ function PostItem({ post, variant = "compact" }) {
     const isAuthor = currentUser && post.author && post.author._id === currentUser._id;
     const isFollowingAuthor = currentUser?.following?.includes(authorId);
 
-    // Классы остались без изменений
-    const headerClasses = `flex flex-col ${variant === "compact" ? 'sm:flex-row sm:items-center sm:justify-between' : 'sm:flex-row sm:justify-between'} gap-3`;
-    const followContainerClasses = `flex ${variant === "compact" ? 'items-center justify-between sm:justify-end gap-2' : 'flex-col items-end gap-1'}`;
-    const dateClasses = `text-xs ${variant === "compact" ? 'text-gray-400' : 'text-gray-400'}`;
+    const isProfileVariant = variant === 'profile';
+    const headerClasses = `flex flex-col ${variant === "compact" || isProfileVariant ? 'sm:flex-row sm:items-center sm:justify-between' : 'sm:flex-row sm:justify-between'} gap-3`;
+    const followContainerClasses = `flex ${variant === "compact" || isProfileVariant ? 'items-center justify-between sm:justify-end gap-2' : 'flex-col items-end gap-1'}`;
+    const dateClasses = 'text-xs text-gray-400';
+    const cardClasses = isProfileVariant
+        ? 'bg-neutral-800 rounded-3xl shadow-xl shadow-neutral-900/50 border-b-4 border-indigo-600 p-4 sm:p-6 mb-6 w-full'
+        : 'bg-neutral-800 rounded-xl shadow-xl shadow-neutral-900/50 p-4 sm:p-6 mb-4 border border-neutral-700 hover:border-blue-600 w-full';
 
     // --- Хэндлеры ---
     
@@ -132,17 +135,15 @@ function PostItem({ post, variant = "compact" }) {
 
     // --- Рендер ---
     return (
-        <div 
-            className={`
-                bg-neutral-800 rounded-xl shadow-xl shadow-neutral-900/50 
-                p-4 sm:p-6 mb-4 border border-neutral-700 hover:border-blue-600 
-                transform transition-all duration-700 ease-out max-w-full overflow-hidden
-                ${isMounted 
-                    ? 'opacity-100 translate-y-0 scale-100' 
-                    : 'opacity-0 translate-y-4 scale-95'}
-                
-            `}
-        >
+        <div 
+            className={`
+                ${cardClasses}
+                transform transition-all duration-700 ease-out overflow-hidden
+                ${isMounted 
+                    ? 'opacity-100 translate-y-0 scale-100' 
+                    : 'opacity-0 translate-y-4 scale-95'}
+            `}
+        >
             
             {/* Шапка */}
             <div className={headerClasses}>

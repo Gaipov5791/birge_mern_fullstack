@@ -82,9 +82,8 @@ function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPos
 
 
     return (
-        <div className="w-full bg-neutral-800 rounded-3xl shadow-xl shadow-neutral-900/50 p-4 sm:p-6 mb-8 border-b-4 border-indigo-600">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-6 border-b border-neutral-700 pb-3">
-                <span className="text-indigo-400 mr-2">/</span>
+        <div className="w-full">
+            <h2 className="text-2xl font-bold text-gray-400 mb-4 mt-8">
                 {t('profile.postsOf', { username: userProfile.username })}
             </h2>
 
@@ -101,7 +100,8 @@ function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPos
                     {Array.isArray(userPosts) && userPosts.map((post) => (
                         <PostItem 
                             key={post._id} 
-                            post={post} 
+                            post={post}
+                            variant="profile"
                         />
                     ))}
                 </div>

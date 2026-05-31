@@ -10,7 +10,7 @@ function ProfileSkeleton() {
 
     return (
         <div className='min-h-screen bg-neutral-950 text-gray-100 p-4 sm:p-6 lg:p-8'>
-            <div className="container mx-auto p-4 max-w-4xl min-h-screen">
+            <div className="container mx-auto p-4 mt-8 max-w-2xl min-h-screen">
                 
                 <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between border-b border-neutral-800 pb-6 mb-6">
                     <div className="flex items-center space-x-4">

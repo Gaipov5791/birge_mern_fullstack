@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import {
@@ -143,7 +143,10 @@ function ProfilePage() {
 
     return (
         <div className='min-h-screen bg-neutral-950 text-gray-100 p-4 sm:p-6 lg:p-8'>
-            <div className="container mx-auto p-4 max-w-4xl min-h-screen">
+            <div className="container mx-auto p-4 mt-8 max-w-2xl min-h-screen">
+                <Link to="/dashboard" className="text-blue-500 hover:underline mb-4 block">
+                    {t('post.backToFeed')}
+                </Link>
 
                 <ProfileActions
                     userProfile={userProfile}

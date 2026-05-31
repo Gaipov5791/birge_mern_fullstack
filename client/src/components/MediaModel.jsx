@@ -55,7 +55,7 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 sm:p-6"
       onClick={handleBackdropClick}
     >
-      <div className="relative flex items-center justify-center w-full h-full max-w-[min(92vw,1100px)] max-h-[88vh]">
+      <div className="relative flex items-center justify-center w-full h-full max-w-[min(80vw,860px)] max-h-[75vh]">
         <button
           onClick={onClose}
           className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white text-2xl z-50 hover:text-gray-300 transition-colors bg-black/50 rounded-full p-2"
@@ -68,7 +68,7 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
           <img
             src={mediaUrl}
             alt={t('media.fullscreenImage')}
-            className="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-lg"
+            className="max-w-full max-h-[68vh] w-auto h-auto object-contain rounded-lg"
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = imageFallbackData;
@@ -82,7 +82,7 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
             src={mediaUrl}
             controls
             playsInline
-            className="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-lg"
+            className="max-w-full max-h-[68vh] w-auto h-auto object-contain rounded-lg"
             onError={() => setVideoError(true)}
           />
         )}
