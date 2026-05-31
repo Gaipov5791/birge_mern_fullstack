@@ -4,6 +4,7 @@ import cloudinary, { IMAGE_UPLOAD_TRANSFORMATION } from "../config/cloudinaryCon
 import { createNotification } from "../utils/createNotification.js";
 
 const PAGE_SIZE = 20;
+const AUTHOR_POPULATE_FIELDS = 'username profilePicture followers following';
 
 const uploadToCloudinary = (file) => {
     return new Promise((resolve, reject) => {
@@ -118,7 +119,7 @@ export const createPost = async (req, res) => {
         const createdPost = await post.save();
 
         // Заполняем поле автора, чтобы вернуть полные данные
-        const populatedPost = await Post.findById(createdPost._id).populate("author", "username profilePicture");
+        const populatedPost = await Post.findById(createdPost._id).populate("author", AUTHOR_POPULATE_FIELDS);
 
         return res.status(201).json({
             message: "Пост успешно создан",
@@ -152,7 +153,7 @@ export const getPosts = async (req, res) => {
         const results = await Post.find(query)
             .sort({ createdAt: -1 })
             .limit(PAGE_SIZE + 1)
-            .populate('author', 'username profilePicture')
+            .populate('author', AUTHOR_POPULATE_FIELDS)
             .lean();
 
         const hasMore = results.length > PAGE_SIZE;
@@ -181,7 +182,7 @@ export const getPostById = async (req, res) => {
         const postId = req.params.id; // Получаем ID поста из параметров запроса
         console.log("Получение поста с ID:", postId);
         const post = await Post.findById(postId)
-            .populate("author", "username profilePicture")
+            .populate("author", AUTHOR_POPULATE_FIELDS)
             .populate({
                 path: 'comments', // Путь к массиву комментариев
                 populate: { // Вложенный populate для автора каждого комментария
@@ -222,7 +223,7 @@ export const getUserPosts = async (req, res) => {
         }
 
         const posts = await Post.find({ author: userId })
-            .populate("author", "username profilePicture")
+            .populate("author", AUTHOR_POPULATE_FIELDS)
             .sort({ createdAt: -1 });
 
         res.status(200).json(posts);
@@ -267,7 +268,7 @@ export const likePost = async (req, res) => {
         await post.save();
 
         const populatedPost = await Post.findById(post._id)
-                                      .populate('author', 'username profilePicture'); //
+                                      .populate('author', AUTHOR_POPULATE_FIELDS); //
 
         const message = alreadyLiked ? "Лайк убран" : "Пост лайкнут";
         return res.status(200).json({ message, post: populatedPost }); //
@@ -337,7 +338,7 @@ export const updatePost = async (req, res) => {
         const updatedPost = await post.save();
 
         // Заполняем информацию о пользователе, чтобы вернуть данные пользователя вместе с постом
-        const populatedPost = await Post.findById(updatedPost._id).populate("author", "username profilePicture");
+        const populatedPost = await Post.findById(updatedPost._id).populate("author", AUTHOR_POPULATE_FIELDS);
 
         return res.status(200).json({
             message: "Пост успешно обновлен",
@@ -396,7 +397,7 @@ export const getTimelinePosts = async (req, res) => {
             author: { $in: allRelevantUserIds }
         })
         .sort({ createdAt: -1 }) // Сортировка от новых к старым
-        .populate('author', 'username profilePicture') // Загружаем username и profilePicture автора
+        .populate('author', AUTHOR_POPULATE_FIELDS) // Загружаем username и profilePicture автора
         .populate({
             path: 'comments.author',
             select: 'username profilePicture' // Загружаем username и profilePicture автора комментария
@@ -422,7 +423,7 @@ export const getPostsByHashtag = async (req, res) => {
         console.log("Получение постов с хэштегом:", tagName);
 
         const posts = await Post.find({ hashtags: tagName }) // Ищем посты, где массив hashtags содержит указанный тег
-            .populate("author", "username profilePicture")
+            .populate("author", AUTHOR_POPULATE_FIELDS)
             .sort({ createdAt: -1 })
             .limit(50); // Ограничиваем количество постов для производительности
 

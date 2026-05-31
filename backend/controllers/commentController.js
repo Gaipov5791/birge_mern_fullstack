@@ -124,7 +124,7 @@ export const deleteComment = async (req, res) => {
             
             // ⭐ КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: Перезагружаем пост с популизацией 
             // Это безопаснее, чем использовать .populate() на объекте, возвращенном .save().
-            updatedPost = await Post.findById(post._id).populate('author', 'username profilePicture');
+            updatedPost = await Post.findById(post._id).populate('author', 'username profilePicture followers following');
         }
 
         // Удаляем сам комментарий

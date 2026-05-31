@@ -6,7 +6,11 @@ body {
   @apply bg-neutral-900 text-white;
 } 
 
-/* Добавьте в ваш основной CSS-файл, например, index.css */
+/* Стили для карусели медиа в постах */
+.media-carousel-container .swiper,
+.media-carousel-container .swiper-slide {
+    width: 100% !important;
+}
 
 /* Базовые стили для пагинации (точек) */
 .swiper-pagination-bullet {

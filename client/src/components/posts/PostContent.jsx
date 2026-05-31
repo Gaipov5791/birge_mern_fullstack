@@ -244,23 +244,21 @@ function PostContent({ post }) {
                 </div>
             )}
 
-                <div className="media-carousel-container max-w-4xl mx-auto overflow-hidden">
+                <div className="media-carousel-container w-full overflow-hidden">
                     <Swiper
                         modules={[Navigation, Pagination]}
                         slidesPerView={1}
-                        navigation={mediaItems.length > 1} // Включаем навигацию только если слайдов > 1
+                        navigation={mediaItems.length > 1}
                         pagination={{ 
                             clickable: true,
-                            // Настройка класса для точек, чтобы они не были прозрачными
                             bulletClass: 'swiper-pagination-bullet bg-gray-600 w-2 h-2 rounded-full inline-block cursor-pointer mx-1',
-                            bulletActiveClass: 'bg-blue-500', // Активная точка
+                            bulletActiveClass: 'bg-blue-500',
                         }}
                         loop={false}
-                        // Для настройки стилей Swiper, которые не покрыты стандартными CSS
-                        className="mySwiper rounded-xl" 
+                        className="mySwiper rounded-xl w-full"
                     >
                         {mediaItems.map((item, index) => (
-                            <SwiperSlide key={index}>
+                            <SwiperSlide key={index} className="!w-full">
                                 {renderSlideContent(item)}
                             </SwiperSlide>
                         ))}

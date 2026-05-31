@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import PostItem from '../PostItem'; 
@@ -14,7 +14,6 @@ import { FaSpinner } from 'react-icons/fa'; // Для спиннера в мод
 function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPostsError }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
-    const { user: currentUser } = useSelector((state) => state.auth);
 
     // ⭐ ИСПОЛЬЗУЕМ REDUX-СОСТОЯНИЯ ВМЕСТО ЛОКАЛЬНЫХ!
     const { isPostOperationLoading, postIdToDelete, postIdToEdit } = useSelector((state) => state.posts);
@@ -83,8 +82,9 @@ function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPos
 
 
     return (
-        <div className="bg-neutral-950 rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-400 mb-4 text-center">
+        <div className="w-full bg-neutral-800 rounded-3xl shadow-xl shadow-neutral-900/50 p-4 sm:p-6 mb-8 border-b-4 border-indigo-600">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-6 border-b border-neutral-700 pb-3">
+                <span className="text-indigo-400 mr-2">/</span>
                 {t('profile.postsOf', { username: userProfile.username })}
             </h2>
 
@@ -97,12 +97,11 @@ function ProfilePostsSection({ userProfile, userPosts, userPostsLoading, userPos
             ) : Array.isArray(userPosts) && userPosts.length === 0 ? (
                 <p className="text-center text-lg text-gray-600">{t('profile.noPosts')}</p>
             ) : (
-                <div className="space-y-6">
+                <div className="space-y-6 w-full">
                     {Array.isArray(userPosts) && userPosts.map((post) => (
                         <PostItem 
                             key={post._id} 
                             post={post} 
-                            currentUserId={currentUser?._id} // Передаем ID для проверки прав
                         />
                     ))}
                 </div>

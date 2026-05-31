@@ -2,9 +2,10 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { 
-    updateSinglePostInState,
-    setPostIdToDelete, 
-    setPostIdToEdit // Оставляем, так как используется в handleEditClick
+    updateSinglePostInState,
+    setPostIdToDelete, 
+    setPostIdToEdit,
+    updatePostAuthorFollowData,
 } from '../redux/features/posts/postSlice';
 import { followUser, unfollowUser } from '../redux/features/auth/authThunks';
 import { likePost } from '../redux/features/posts/postThunks';
@@ -55,12 +56,28 @@ function PostItem({ post, variant = "compact" }) {
         if (isTogglingFollow) return;
         setIsTogglingFollow(true);
 
-        try {
-            if (isFollowingAuthor) {
-                await dispatch(unfollowUser(authorId)).unwrap();
+        try {
+            if (isFollowingAuthor) {
+                const result = await dispatch(unfollowUser(authorId)).unwrap();
+                const updatedAuthor = result.userToUnfollow;
+                if (updatedAuthor) {
+                    dispatch(updatePostAuthorFollowData({
+                        userId: authorId,
+                        followers: updatedAuthor.followers,
+                        following: updatedAuthor.following,
+                    }));
+                }
                 dispatch(toastSuccess(t('post.unfollowed')));
             } else {
-                await dispatch(followUser(authorId)).unwrap();
+                const result = await dispatch(followUser(authorId)).unwrap();
+                const updatedAuthor = result.userToFollow;
+                if (updatedAuthor) {
+                    dispatch(updatePostAuthorFollowData({
+                        userId: authorId,
+                        followers: updatedAuthor.followers,
+                        following: updatedAuthor.following,
+                    }));
+                }
                 dispatch(toastSuccess(t('post.followed')));
             }
         } catch {

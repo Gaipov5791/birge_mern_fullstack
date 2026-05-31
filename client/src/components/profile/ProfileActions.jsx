@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify'; 
 import axios from 'axios';
 import { setUserProfile } from '../../redux/features/auth/authSlice';
+import { updatePostAuthorFollowData } from '../../redux/features/posts/postSlice';
 import ProfileHeader from '../../components/profile/ProfileHeader'; // Импортируем ProfileHeader
 
 // Получаем базовый URL API из переменной окружения
@@ -39,17 +40,26 @@ function ProfileActions({ userProfile, currentUser }) {
 
         try {
             const token = localStorage.getItem('token');
-            const url = `${API_BASE_URL}/users/follow/${userProfile._id}`;
             const config = {
                 headers: { Authorization: `Bearer ${token}` },
             };
-            
-            const method = isFollowing ? axios.delete : axios.put;
 
-            const response = await method(url, {}, config);
-            
-            dispatch(setUserProfile(response.data.updatedUser)); 
-            
+            const url = isFollowing
+                ? `${API_BASE_URL}/users/unfollow/${userProfile._id}`
+                : `${API_BASE_URL}/users/follow/${userProfile._id}`;
+
+            const response = await axios.put(url, {}, config);
+            const updatedAuthor = isFollowing
+                ? response.data.userToUnfollow
+                : response.data.userToFollow;
+
+            dispatch(setUserProfile(updatedAuthor));
+            dispatch(updatePostAuthorFollowData({
+                userId: userProfile._id,
+                followers: updatedAuthor.followers,
+                following: updatedAuthor.following,
+            }));
+
             toast.success(t('profile.followSuccess', { action }));
 
         } catch (error) {

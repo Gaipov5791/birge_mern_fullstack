@@ -52,13 +52,13 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-95 transition-opacity duration-300"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 sm:p-6"
       onClick={handleBackdropClick}
     >
-      <div className="relative max-w-[90vw] max-h-[90vh] p-4">
+      <div className="relative flex items-center justify-center w-full h-full max-w-[min(92vw,1100px)] max-h-[88vh]">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white text-2xl z-50 hover:text-gray-300 transition-colors"
+          className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white text-2xl z-50 hover:text-gray-300 transition-colors bg-black/50 rounded-full p-2"
           aria-label={t('common.close')}
         >
           <FaTimes />
@@ -68,7 +68,7 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
           <img
             src={mediaUrl}
             alt={t('media.fullscreenImage')}
-            className="max-w-full max-h-[85vh] object-contain"
+            className="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-lg"
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = imageFallbackData;
@@ -82,13 +82,13 @@ function MediaModal({ mediaUrl, mediaType, onClose }) {
             src={mediaUrl}
             controls
             playsInline
-            className="max-w-full max-h-[85vh] object-contain"
+            className="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-lg"
             onError={() => setVideoError(true)}
           />
         )}
 
         {mediaType === 'video' && videoError && (
-          <div className="flex items-center justify-center w-[80vw] max-w-[800px] h-[45vw] max-h-[450px] bg-gray-200 rounded-md text-gray-600 text-center px-6">
+          <div className="flex items-center justify-center w-full max-w-lg aspect-video bg-gray-200 rounded-md text-gray-600 text-center px-6">
             {t('media.videoUnavailable')}
           </div>
         )}
