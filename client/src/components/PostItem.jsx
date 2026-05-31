@@ -164,9 +164,10 @@ function PostItem({ post, variant = "compact" }) {
             </div>
 
             {/* Контент */}
-            <PostContent
-                post={post}
-            />
+            <PostContent
+                post={post}
+                compactMedia
+            />
 
             {/* Действия */}
             <div className="mt-4 pt-4 border-t border-neutral-700">

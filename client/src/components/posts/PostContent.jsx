@@ -83,7 +83,7 @@ const parsePostText = (text) => {
 };
 
 
-function PostContent({ post }) {
+function PostContent({ post, compactMedia = false }) {
     const { t } = useTranslation();
     const [modalData, setModalData] = useState({ url: null, type: null });
     const imageFallbackData = useMemo(() => getImageFallbackData(t('common.imageNotFound')), [t]);
@@ -166,6 +166,13 @@ function PostContent({ post }) {
     }, [post.text, isExpanded, toggleExpand, t]);
 
 
+    const mediaContainerClass = useMemo(() => (
+        compactMedia
+            ? 'relative flex justify-center items-center cursor-pointer p-1 bg-neutral-700 rounded-xl transition duration-300 hover:bg-neutral-600 overflow-hidden w-full max-h-[280px] lg:max-h-[220px]'
+            : 'relative flex justify-center items-center cursor-pointer p-1 bg-neutral-700 rounded-xl transition duration-300 hover:bg-neutral-600 overflow-hidden w-full max-h-96'
+    ), [compactMedia]);
+    const mediaClass = 'max-h-full max-w-full w-auto rounded-lg object-contain shadow-xl shadow-black/50 transition duration-300';
+
     // ⭐ 2. Компонент для рендеринга ОДНОГО слайда
     const renderSlideContent = useCallback((item) => {
         const fullUrl = getSafeUrl(item.url, BACKEND_URL);
@@ -173,16 +180,10 @@ function PostContent({ post }) {
         const isImage = item.type === 'image';
         const isVideo = item.type === 'video';
 
-        // Базовый класс для контейнера медиа
-        const containerClass = "relative flex justify-center cursor-pointer p-1 bg-neutral-700 rounded-xl transition duration-300 hover:bg-neutral-600";
-        // Класс для самого медиа
-        const mediaClass = "max-h-[400px] max-w-full w-auto rounded-lg object-contain shadow-xl shadow-black/50 transition duration-300";
-
-
         if (isImage) {
             return (
                 <div
-                    className={containerClass}
+                    className={mediaContainerClass}
                     onClick={() => openMediaModal(item.url, 'image')}
                 >
                     <img
@@ -201,7 +202,7 @@ function PostContent({ post }) {
         if (isVideo) {
             return (
                 <div
-                    className={containerClass}
+                    className={mediaContainerClass}
                     onClick={() => openMediaModal(item.url, 'video')}
                 >
                     <video
@@ -214,15 +215,15 @@ function PostContent({ post }) {
                     />
                     {/* Кнопка Play */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="bg-black/70 rounded-full p-5 hover:bg-blue-600/80 transition duration-200">
-                            <FaPlay className="text-white text-2xl" />
+                        <div className={`bg-black/70 rounded-full hover:bg-blue-600/80 transition duration-200 ${compactMedia ? 'p-3 lg:p-4' : 'p-5'}`}>
+                            <FaPlay className={`text-white ${compactMedia ? 'text-lg lg:text-xl' : 'text-2xl'}`} />
                         </div>
                     </div>
                 </div>
             );
         }
         return null;
-    }, [openMediaModal, t, imageFallbackData]);
+    }, [openMediaModal, t, imageFallbackData, compactMedia, mediaContainerClass, mediaClass]);
 
     // Если медиа нет, рендерим только текст
     if (mediaItems.length === 0) {
